@@ -1,4 +1,4 @@
-package com.cc.database.member.backend.profile;
+package com.cc.database.backend.profile;
 
 import lombok.Getter;
 import lombok.Setter;
