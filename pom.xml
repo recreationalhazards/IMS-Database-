@@ -37,12 +37,58 @@
                 </exclusion>
             </exclusions>
         </dependency>
+<!--Start swagger dependecy-->
+        <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-core</artifactId>
+            <version>2.0.0-rc1</version>
+            <scope>provided</scope>
+        </dependency>
 
+        <dependency>
+        <groupId>io.swagger</groupId>
+        <artifactId>swagger-annotations</artifactId>
+            <version>1.5.10</version>
+            <scope>provided</scope>
+        </dependency>
+
+
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-core</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger-ui</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+<!--End swagger dependency -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.18.10</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.cc.database</groupId>
+            <artifactId>cc-database-services</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>4.3.12.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>com.onpositive.aml</groupId>
+            <artifactId>org.aml.apimodel</artifactId>
+            <version>0.0.12</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>5.3.5.Final</version>
         </dependency>
     </dependencies>
 

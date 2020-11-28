@@ -1,2 +1,10 @@
-com\cc\database\member\backend\person\model\Person.class
-com\cc\database\member\servlet\LoggingFilter.class
+com/cc/database/member/backend/profile/EmailAddress.class
+com/cc/database/member/backend/profile/PersonProfileApi.class
+com/cc/database/member/backend/phone/PhoneNumber.class
+com/cc/database/member/DatabaseApplication.class
+com/cc/database/member/servlet/LoggingFilter.class
+com/cc/database/member/backend/membership/MemberItem.class
+com/cc/database/member/backend/person/model/Person.class
+com/cc/database/member/backend/membership/MemberShip.class
+com/cc/database/member/backend/postalAddress/PostalAddress.class
+com/cc/database/member/backend/profile/PersonProfileResponse.class
