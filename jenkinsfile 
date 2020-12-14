@@ -1,0 +1,48 @@
+@Libary('')
+
+def pcfProps = [dev:[:], qa:[:]]
+//def pcfProps = [dev:[:], qa:[:], prod:[:], dr:[:]]
+
+//Dev configurations
+pcfProps.dev.appName= ''
+pcfProps.dev.appNameTemp = '-api-1-dev-candidate'
+pcfProps.dev.removeCandidateInstances = true
+pcfProps.dev.requireApprovalOnDeploy = false
+pcfProps.dev.requireApprovalOnActive = false
+pcfProps.dev.route = ''
+pcfProps.dev.routeTemp = ''
+pcfProps.dev.shouldBindToAutoscale = false
+
+//QA configurations
+pcfProps.qa.appName= ''
+pcfProps.qa.appNameTemp = '-api-1-qa-candidate'
+pcfProps.qa.removeCandidateInstances = true
+pcfProps.qa.requireApprovalOnDeploy = false
+pcfProps.qa.requireApprovalOnActive = false
+pcfProps.qa.route = ''
+pcfProps.qa.routeTemp = ''
+pcfProps.qa.shouldBindToAutoscale = false
+
+//Prod configurations
+//pcfProps.prod.appName= ''
+//pcfProps.prod.appNameTemp = '-api-1-qa-candidate'
+//pcfProps.prod.removeCandidateInstances = true
+//pcfProps.prod.requireApprovalOnDeploy = false
+//pcfProps.prod.requireApprovalOnActive = false
+//pcfProps.prod.route = ''
+//pcfProps.prod.routeTemp = ''
+//pcfProps.prod.shouldBindToAutoscale = false
+//pcfProps.prod.credentials = '- Jenkins Space Developer'
+
+buildFlow{
+applicationName = "ims database "
+buildGoals = "clean install -U org.sonar.scanner.maven:sonar-maven-plugin:3.4.0.905:sonar"
+buildType = 'SpringPcf'
+mattermostChannel = 'jkkib6khobbxfxjguipj8kec3h'
+jiraProject = 'RHIMS'
+mavenOpts = '-Xms256m -Xmx2048m'
+organization = 'Panacea'
+pcfProperties = 'pcfProps'
+pomDirectory = "."
+versionServiceUrl = true
+}
