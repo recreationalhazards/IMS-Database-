@@ -20,6 +20,9 @@ public class LoginRequest {
     @ApiModelProperty(value = "Password", required = true)
     private String password;
 
+
+
+    //future feature
     @ApiModelProperty(value = "DeviceId is required if user wants to login in with touch id.")
     private String deviceId;
 

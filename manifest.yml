@@ -1,0 +1,16 @@
+
+#shared configuration
+memory: 2G
+timeout: 180
+buildpack: java_buildpack_stable
+stack:
+path:
+
+env:
+   spring.application.name: ims-databse-service
+
+application:
+  - name:-api-1-dev-candidate
+   instances: 2
+   services:
+

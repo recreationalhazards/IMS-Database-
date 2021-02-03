@@ -1,0 +1,30 @@
+# Generated files
+target/
+generated
+*.class
+.log
+.log.0
+.log.0.lck
+.log.0.1
+.log.0.1.lck
+.DS_Store
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionBackup
+pom.xml.next
+release.propteries
+dependency-reduced-pom.xl
+buildNumber.properties
+.mvn/timing.properties
+# Eclipse
+.metadata
+.settings
+.classpath
+.project
+.springbeans
+# Intellij
+*.iml
+.idea/
+*~
+/bin/
+/.run/
