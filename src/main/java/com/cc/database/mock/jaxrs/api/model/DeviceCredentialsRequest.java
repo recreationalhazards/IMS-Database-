@@ -13,7 +13,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Setter
 @ApiModel(value = "Touch Id login model", description = "Device Credential Request")
 public class DeviceCredentialsRequest {
-    @NotEmpty(message = "deviceId must be specificed")
+    @NotEmpty(message = "deviceId must be specified")
     @ApiModelProperty(value = "DeviceId", required = true)
     private String deviceId;
 
