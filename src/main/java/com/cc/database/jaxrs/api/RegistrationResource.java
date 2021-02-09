@@ -27,8 +27,6 @@ public interface RegistrationResource {
             @ApiResponse(code = 500, message = "On internal service failure", response = ErrorResponse.class) })
     Response verify(@Valid VerificationRequest verificationRequest);
 
-
-
     //cant figure out why the value is not picking up
 
     @POST
