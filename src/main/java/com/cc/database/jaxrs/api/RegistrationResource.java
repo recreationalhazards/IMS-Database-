@@ -22,7 +22,7 @@ public interface RegistrationResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Registration Verification", notes ="This method will verify user's info matches the records")
-    @ApiResponse(value = { @ApiResponse(code = 200, message = "Successful", response = Response.class),
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful", response = Response.class),
             @ApiResponse(code = 401, message = "if invalid credentials are passed", response = ErrorResponse.class),
             @ApiResponse(code = 500, message = "On internal service failure", response = ErrorResponse.class) })
     Response verify(@Valid VerificationRequest verificationRequest);
@@ -34,7 +34,7 @@ public interface RegistrationResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Registration One Time Password Validation", notes ="This method validated that the one time password is legitimate")
-    @ApiResponse(value = { @ApiResponse(code = 200, message = "Successful", response = Response.class),
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Successful", response = Response.class),
             @ApiResponse(code = 400, message = "if one time password, email, and/or phone number is blank", response = ErrorResponse.class),
             @ApiResponse(code = 401, message = "if invalid one time password, email and/or phone number ", response = ErrorResponse.class),
             @ApiResponse(code = 500, message = "On internal service failure", response = ErrorResponse.class) })

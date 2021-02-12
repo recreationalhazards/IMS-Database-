@@ -123,6 +123,7 @@
     <orderEntry type="library" name="Maven: org.springframework:spring-expression:5.2.8.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: com.onpositive.aml:org.aml.apimodel:0.0.12" level="project" />
     <orderEntry type="library" name="Maven: com.onpositive.aml:org.aml.typesystem:0.0.12" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework.boot:spring-boot-configuration-processor:2.3.3.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: org.hibernate:hibernate-validator:5.3.5.Final" level="project" />
     <orderEntry type="library" name="Maven: org.jboss.logging:jboss-logging:3.4.1.Final" level="project" />
     <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.30-RC" level="project" />

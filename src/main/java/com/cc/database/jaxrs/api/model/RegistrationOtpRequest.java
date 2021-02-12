@@ -31,6 +31,4 @@ public class RegistrationOtpRequest {
     @EmailValid
     @ApiModelProperty(value = "Email Address", required= true, example = "jdoe@test.com")
     private String emailAddress;
-
-
 }

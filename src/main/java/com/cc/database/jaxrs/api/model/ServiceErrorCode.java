@@ -19,8 +19,4 @@ public enum ServiceErrorCode {
 
     @Getter
     private final int errorCode;
-
-
-
-
 }

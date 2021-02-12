@@ -1,7 +1,7 @@
 package com.cc.database.backend.person.model;
 
 import com.cc.database.backend.phone.PhoneNumber;
-import com.cc.database.backend.postalAddress.PostalAddress;
+import com.cc.database.backend.postalAdress.PostalAddress;
 import lombok.Getter;
 
 import java.util.List;
@@ -12,5 +12,5 @@ public class Person {
     private UUID resourceId;
     private List<PhoneNumber> phoneNumbers;
     private List <PostalAddress> postalAddresses;
-    String name;
+    private String name;
 }
