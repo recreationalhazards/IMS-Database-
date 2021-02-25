@@ -1,6 +1,8 @@
 package com.cc.database.backend.membership.model.member;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.print.attribute.standard.Media;
@@ -16,9 +18,9 @@ public class MemberService {
     private MemberRepo memberRepo;
 
     // Save New Member
-    public Response saveMember(Member member) {
+    public ResponseEntity<Member> saveMember(Member member) {
         memberRepo.save(member);
-        return Response.ok(member).build();
+        return new ResponseEntity<Member>(member, HttpStatus.CREATED);
     }
 
     // Edit Existing Member
