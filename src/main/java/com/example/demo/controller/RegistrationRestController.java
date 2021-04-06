@@ -11,16 +11,14 @@ import com.example.demo.service.IUserService;
 import com.example.demo.util.GenericResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.MessageSource;
 import org.springframework.core.env.Environment;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -34,16 +32,20 @@ public class RegistrationRestController {
 
     private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
+    @Autowired
     private IUserService userService;
 
     private ISecurityUserService securityUserService;
 
+    @Autowired
     private MessageSource messages;
 
     private JavaMailSender mailSender;
 
+    @Autowired
     private ApplicationEventPublisher eventPublisher;
 
+    @Autowired
     private Environment env;
 
     public RegistrationRestController() {
@@ -52,7 +54,7 @@ public class RegistrationRestController {
 
     // Registration
     @PostMapping("/user/registration")
-    public GenericResponse registerUserAccount(@Valid final UserDto accountDto, final HttpServletRequest request) {
+    public GenericResponse registerUserAccount(@RequestBody @Valid final UserDto accountDto, final HttpServletRequest request) {
         LOGGER.debug("Registering user account with information: {}", accountDto);
 
         final User registered = userService.registerNewUserAccount(accountDto);
@@ -63,7 +65,7 @@ public class RegistrationRestController {
 
     // User activation - verification
     @GetMapping("/user/resendRegistrationToken")
-    public GenericResponse resendRegistrationToken(final HttpServletRequest request, @RequestParam("token") final String existingToken) {
+    public GenericResponse resendRegistrationToken(@RequestBody final HttpServletRequest request, @RequestParam("token") final String existingToken) {
         final VerificationToken newToken = userService.generateNewVerificationToken(existingToken);
         final User user = userService.getUser(newToken.getToken());
         mailSender.send(constructResendVerificationTokenEmail((getAppUrl(request).toString()), request.getLocale(), newToken, user));
@@ -72,7 +74,7 @@ public class RegistrationRestController {
 
     // Reset password
     @PostMapping("/user/resetPassword")
-    public GenericResponse resetPassword(final HttpServletRequest request, @RequestParam("email") final String userEmail) {
+    public GenericResponse resetPassword(@RequestBody final HttpServletRequest request, @RequestParam("email") final String userEmail) {
         final User user = userService.findUserByEmail(userEmail);
         if (user != null) {
             final String token = UUID.randomUUID().toString();
@@ -84,7 +86,7 @@ public class RegistrationRestController {
 
     // Save Password
     @PostMapping("/user/savePassword")
-    public GenericResponse savePassword(final Locale locale, @Valid PasswordDto passwordDto) {
+    public GenericResponse savePassword(@RequestBody final Locale locale, @RequestBody @Valid PasswordDto passwordDto) {
 
         final String result = securityUserService.validatePasswordResetToken(passwordDto.getToken());
 
@@ -103,7 +105,7 @@ public class RegistrationRestController {
 
     // Change User password
     @PostMapping("/user/updatePassword")
-    public GenericResponse changeUserPassword(final Locale locale, @Valid PasswordDto passwordDto) {
+    public GenericResponse changeUserPassword(@RequestBody final Locale locale, @RequestBody @Valid PasswordDto passwordDto) {
         final User user = userService.findUserByEmail(((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getEmail());
         if (!userService.checkIfValidOldPassword(user, passwordDto.getOldPassword())) {
             throw new InvalidOldPasswordException();

@@ -7,11 +7,13 @@ import com.example.demo.persistence.model.*;
 import com.maxmind.geoip2.DatabaseReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
@@ -20,7 +22,6 @@ import javax.transaction.Transactional;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.URLEncoder;
-import java.net.UnknownHostException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,7 +36,12 @@ public class UserService implements IUserService {
 
     private PasswordResetTokenRepository passwordTokenRepository;
 
-    private PasswordEncoder passwordEncoder;
+    @Bean
+    private PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    };
+
+    private PasswordEncoder passwordEncoder = passwordEncoder();
 
     private RoleRepository roleRepository;
 
@@ -57,6 +63,11 @@ public class UserService implements IUserService {
     public static String QR_PREFIX = "https://chart.googleapis.com/chart?chs=200x200&chld=M%%7C0&cht=qr&chl=";
     public static String APP_NAME = "SpringRegistration";
 
+    public UserService(UserRepository userRepository, RoleRepository roleRepository) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+    }
+
     // API
 
     @Override
@@ -65,6 +76,19 @@ public class UserService implements IUserService {
             throw new UserAlreadyExistException("There is an account with that email address: " + accountDto.getEmail());
         }
 
+          final User user = userDtoToUser(accountDto);
+//
+//        user.setFirstName(accountDto.getFirstName());
+//        user.setLastName(accountDto.getLastName());
+//        user.setPassword(passwordEncoder.encode(accountDto.getPassword()));
+//        user.setEmail(accountDto.getEmail());
+//        user.setUsing2FA(accountDto.isUsing2FA());
+//        user.setRoles(Arrays.asList(roleRepository.findByName("ROLE_USER")));
+
+        return userRepository.save(user);
+    }
+
+    public User userDtoToUser(final UserDto accountDto) {
         final User user = new User();
 
         user.setFirstName(accountDto.getFirstName());
@@ -73,7 +97,8 @@ public class UserService implements IUserService {
         user.setEmail(accountDto.getEmail());
         user.setUsing2FA(accountDto.isUsing2FA());
         user.setRoles(Arrays.asList(roleRepository.findByName("ROLE_USER")));
-        return userRepository.save(user);
+
+        return user;
     }
 
     private boolean emailExists(final String email) {
