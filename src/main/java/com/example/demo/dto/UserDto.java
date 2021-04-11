@@ -33,6 +33,8 @@ public class UserDto {
 
     private Integer role;
 
+    private String phoneNumber;
+
     public String getEmail() {
         return email;
     }
@@ -89,6 +91,14 @@ public class UserDto {
         this.isUsing2FA = isUsing2FA;
     }
 
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
     @Override
     public String toString() {
         final StringBuilder builder = new StringBuilder();
@@ -101,7 +111,9 @@ public class UserDto {
                 .append(", isUsing2FA=")
                 .append(isUsing2FA)
                 .append(", role=")
-                .append(role).append("]");
+                .append(role).append("]")
+                .append(", phoneNumber=")
+                .append(phoneNumber);
         return builder.toString();
     }
 }

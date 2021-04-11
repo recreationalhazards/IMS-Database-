@@ -58,23 +58,24 @@ public class RegistrationRestController {
         LOGGER.debug("Registering user account with information: {}", accountDto);
 
         final User registered = userService.registerNewUserAccount(accountDto);
-        userService.addUserLocation(registered, getClientIP(request));
-        eventPublisher.publishEvent(new OnRegistrationCompleteEvent(registered, request.getLocale(), (String) getAppUrl(request)));
+        // Will work on this later on
+       // userService.addUserLocation(registered, getClientIP(request));
+       // eventPublisher.publishEvent(new OnRegistrationCompleteEvent(registered, request.getLocale(), (String) getAppUrl(request)));
         return new GenericResponse("success");
     }
 
     // User activation - verification
-    @GetMapping("/user/resendRegistrationToken")
-    public GenericResponse resendRegistrationToken(@RequestBody final HttpServletRequest request, @RequestParam("token") final String existingToken) {
+    @GetMapping("/user/sendRegistrationToken")
+    public GenericResponse sendRegistrationToken(final HttpServletRequest request, @RequestParam("token") final String existingToken) {
         final VerificationToken newToken = userService.generateNewVerificationToken(existingToken);
         final User user = userService.getUser(newToken.getToken());
         mailSender.send(constructResendVerificationTokenEmail((getAppUrl(request).toString()), request.getLocale(), newToken, user));
         return new GenericResponse(messages.getMessage("message.resendToken", null, request.getLocale()));
     }
 
-    // Reset password
+    // Send link to email after forgetting password to reset password. The link will redirect user to /user/savePassword
     @PostMapping("/user/resetPassword")
-    public GenericResponse resetPassword(@RequestBody final HttpServletRequest request, @RequestParam("email") final String userEmail) {
+    public GenericResponse resetPassword(final HttpServletRequest request, @RequestParam("email") final String userEmail) {
         final User user = userService.findUserByEmail(userEmail);
         if (user != null) {
             final String token = UUID.randomUUID().toString();
@@ -84,7 +85,7 @@ public class RegistrationRestController {
         return new GenericResponse(messages.getMessage("message.resetPasswordEmail", null, request.getLocale()));
     }
 
-    // Save Password
+    // Reset password after forgetting old password
     @PostMapping("/user/savePassword")
     public GenericResponse savePassword(@RequestBody final Locale locale, @RequestBody @Valid PasswordDto passwordDto) {
 
@@ -103,7 +104,7 @@ public class RegistrationRestController {
         }
     }
 
-    // Change User password
+    // Change User password from old password
     @PostMapping("/user/updatePassword")
     public GenericResponse changeUserPassword(@RequestBody final Locale locale, @RequestBody @Valid PasswordDto passwordDto) {
         final User user = userService.findUserByEmail(((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getEmail());

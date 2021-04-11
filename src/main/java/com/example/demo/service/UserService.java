@@ -77,13 +77,6 @@ public class UserService implements IUserService {
         }
 
           final User user = userDtoToUser(accountDto);
-//
-//        user.setFirstName(accountDto.getFirstName());
-//        user.setLastName(accountDto.getLastName());
-//        user.setPassword(passwordEncoder.encode(accountDto.getPassword()));
-//        user.setEmail(accountDto.getEmail());
-//        user.setUsing2FA(accountDto.isUsing2FA());
-//        user.setRoles(Arrays.asList(roleRepository.findByName("ROLE_USER")));
 
         return userRepository.save(user);
     }
@@ -97,6 +90,7 @@ public class UserService implements IUserService {
         user.setEmail(accountDto.getEmail());
         user.setUsing2FA(accountDto.isUsing2FA());
         user.setRoles(Arrays.asList(roleRepository.findByName("ROLE_USER")));
+        user.setPhoneNumber(accountDto.getPhoneNumber());
 
         return user;
     }
