@@ -139,7 +139,8 @@ public class RegistrationRestController {
 
     private SimpleMailMessage sendAccountActivationEmail(final String token, final String email, final User user) {
         final String subject = "Activate your account!";
-        final String body = userService.createVerificationTokenForUser(user, user.getEmail()).getToken();
+        final String url = "http://localhost:8081/user/registration/activation?token=";
+        final String body = url + userService.createVerificationTokenForUser(user, user.getEmail()).getToken();
         return constructEmail(subject, body, user);
     }
 
