@@ -5,7 +5,6 @@ import com.example.demo.error.UserAlreadyExistException;
 import com.example.demo.persistence.dao.*;
 import com.example.demo.persistence.model.*;
 import com.maxmind.geoip2.DatabaseReader;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
@@ -131,9 +130,9 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void createVerificationTokenForUser(final User user, final String token) {
+    public VerificationToken createVerificationTokenForUser(final User user, final String token) {
         final VerificationToken myToken = new VerificationToken(token, user);
-        tokenRepository.save(myToken);
+        return tokenRepository.save(myToken);
     }
 
     @Override
@@ -308,5 +307,11 @@ public class UserService implements IUserService {
         } catch ( final Exception e ) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void activateAccount(User user) {
+        user.setEnabled(true);
+        userRepository.save(user);
     }
 }

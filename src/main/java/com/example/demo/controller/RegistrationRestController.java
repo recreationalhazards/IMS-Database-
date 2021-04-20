@@ -25,6 +25,7 @@ import javax.validation.Valid;
 import java.io.UnsupportedEncodingException;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Random;
 import java.util.UUID;
 
 @RestController
@@ -40,6 +41,7 @@ public class RegistrationRestController {
     @Autowired
     private MessageSource messages;
 
+    @Autowired
     private JavaMailSender mailSender;
 
     @Autowired
@@ -53,7 +55,7 @@ public class RegistrationRestController {
     }
 
     // Registration
-    @PostMapping("/user/registration")
+    @PostMapping("/user/registration/verification")
     public GenericResponse registerUserAccount(@RequestBody @Valid final UserDto accountDto, final HttpServletRequest request) {
         LOGGER.debug("Registering user account with information: {}", accountDto);
 
@@ -61,6 +63,16 @@ public class RegistrationRestController {
         // Will work on this later on
        // userService.addUserLocation(registered, getClientIP(request));
        // eventPublisher.publishEvent(new OnRegistrationCompleteEvent(registered, request.getLocale(), (String) getAppUrl(request)));
+        String token = UUID.randomUUID().toString();
+        mailSender.send(sendAccountActivationEmail(token, registered.getEmail(), registered));
+        return new GenericResponse("success");
+    }
+
+    @GetMapping("/user/registration/activation")
+    public GenericResponse activateUserAccount(@RequestParam final String token, final HttpServletRequest request) {
+        final VerificationToken verificationToken = userService.getVerificationToken(token);
+        final User user = userService.getUser(verificationToken.getToken());
+        userService.activateAccount(user);
         return new GenericResponse("success");
     }
 
@@ -74,8 +86,8 @@ public class RegistrationRestController {
     }
 
     // Send link to email after forgetting password to reset password. The link will redirect user to /user/savePassword
-    @PostMapping("/user/resetPassword")
-    public GenericResponse resetPassword(final HttpServletRequest request, @RequestParam("email") final String userEmail) {
+    @PostMapping("/user/registration/oneTimePassword")
+    public GenericResponse recoverPassword(final HttpServletRequest request, @RequestParam("email") final String userEmail) {
         final User user = userService.findUserByEmail(userEmail);
         if (user != null) {
             final String token = UUID.randomUUID().toString();
@@ -125,6 +137,12 @@ public class RegistrationRestController {
         return null;
     }
 
+    private SimpleMailMessage sendAccountActivationEmail(final String token, final String email, final User user) {
+        final String subject = "Activate your account!";
+        final String body = userService.createVerificationTokenForUser(user, user.getEmail()).getToken();
+        return constructEmail(subject, body, user);
+    }
+
 
     private SimpleMailMessage constructResetTokenEmail(final String contextPath, final Locale locale, final String token, final User user) {
         final String url = contextPath + "/user/changePassword?token=" + token;
@@ -143,7 +161,7 @@ public class RegistrationRestController {
         simpleMailMessage.setSubject(subject);
         simpleMailMessage.setText(body);
         simpleMailMessage.setTo(user.getEmail());
-        simpleMailMessage.setFrom(env.getProperty("support.email"));
+        simpleMailMessage.setFrom(env.getProperty("spring.mail.username"));
         return simpleMailMessage;
     }
 
