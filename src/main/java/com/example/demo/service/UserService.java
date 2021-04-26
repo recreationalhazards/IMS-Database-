@@ -5,6 +5,7 @@ import com.example.demo.error.UserAlreadyExistException;
 import com.example.demo.persistence.dao.*;
 import com.example.demo.persistence.model.*;
 import com.maxmind.geoip2.DatabaseReader;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
@@ -29,10 +30,13 @@ import java.util.stream.Collectors;
 @Component
 public class UserService implements IUserService {
 
+    @Autowired
     private UserRepository userRepository;
 
+    @Autowired
     private VerificationTokenRepository tokenRepository;
 
+    @Autowired
     private PasswordResetTokenRepository passwordTokenRepository;
 
     @Bean
@@ -40,8 +44,10 @@ public class UserService implements IUserService {
         return new BCryptPasswordEncoder();
     };
 
+    @Autowired
     private PasswordEncoder passwordEncoder = passwordEncoder();
 
+    @Autowired
     private RoleRepository roleRepository;
 
     private SessionRegistry sessionRegistry;
@@ -49,10 +55,13 @@ public class UserService implements IUserService {
     @Qualifier("GeoIPCountry")
     private DatabaseReader databaseReader;
 
+    @Autowired
     private UserLocationRepository userLocationRepository;
 
+    @Autowired
     private NewLocationTokenRepository newLocationTokenRepository;
 
+    @Autowired
     private Environment env;
 
     private static final String TOKEN_INVALID = "invalidToken";

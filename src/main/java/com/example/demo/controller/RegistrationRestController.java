@@ -5,7 +5,6 @@ import com.example.demo.dto.UserDto;
 import com.example.demo.error.InvalidOldPasswordException;
 import com.example.demo.persistence.model.User;
 import com.example.demo.persistence.model.VerificationToken;
-import com.example.demo.registration.OnRegistrationCompleteEvent;
 import com.example.demo.security.ISecurityUserService;
 import com.example.demo.service.IUserService;
 import com.example.demo.util.GenericResponse;
@@ -25,7 +24,6 @@ import javax.validation.Valid;
 import java.io.UnsupportedEncodingException;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.Random;
 import java.util.UUID;
 
 @RestController
@@ -63,7 +61,7 @@ public class RegistrationRestController {
         // Will work on this later on
        // userService.addUserLocation(registered, getClientIP(request));
        // eventPublisher.publishEvent(new OnRegistrationCompleteEvent(registered, request.getLocale(), (String) getAppUrl(request)));
-        String token = UUID.randomUUID().toString();
+        final String token = UUID.randomUUID().toString();
         mailSender.send(sendAccountActivationEmail(token, registered.getEmail(), registered));
         return new GenericResponse("success");
     }
@@ -77,7 +75,7 @@ public class RegistrationRestController {
     }
 
     // User activation - verification
-    @GetMapping("/user/sendRegistrationToken")
+    @GetMapping("/user/resendRegistrationToken")
     public GenericResponse sendRegistrationToken(final HttpServletRequest request, @RequestParam("token") final String existingToken) {
         final VerificationToken newToken = userService.generateNewVerificationToken(existingToken);
         final User user = userService.getUser(newToken.getToken());
@@ -98,8 +96,8 @@ public class RegistrationRestController {
     }
 
     // Reset password after forgetting old password
-    @PostMapping("/user/savePassword")
-    public GenericResponse savePassword(@RequestBody final Locale locale, @RequestBody @Valid PasswordDto passwordDto) {
+    @PostMapping("/user/resetPassword")
+    public GenericResponse resetPassword(final Locale locale, @RequestBody @Valid PasswordDto passwordDto) {
 
         final String result = securityUserService.validatePasswordResetToken(passwordDto.getToken());
 
@@ -118,7 +116,7 @@ public class RegistrationRestController {
 
     // Change User password from old password
     @PostMapping("/user/updatePassword")
-    public GenericResponse changeUserPassword(@RequestBody final Locale locale, @RequestBody @Valid PasswordDto passwordDto) {
+    public GenericResponse updatePassword(@RequestBody final Locale locale, @RequestBody @Valid PasswordDto passwordDto) {
         final User user = userService.findUserByEmail(((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getEmail());
         if (!userService.checkIfValidOldPassword(user, passwordDto.getOldPassword())) {
             throw new InvalidOldPasswordException();
@@ -140,7 +138,7 @@ public class RegistrationRestController {
     private SimpleMailMessage sendAccountActivationEmail(final String token, final String email, final User user) {
         final String subject = "Activate your account!";
         final String url = "http://localhost:8081/user/registration/activation?token=";
-        final String body = url + userService.createVerificationTokenForUser(user, user.getEmail()).getToken();
+        final String body = url + userService.createVerificationTokenForUser(user, token).getToken();
         return constructEmail(subject, body, user);
     }
 
@@ -152,7 +150,7 @@ public class RegistrationRestController {
     }
 
     private SimpleMailMessage constructResendVerificationTokenEmail(final String contextPath, final Locale locale, final VerificationToken newToken, final User user) {
-        final String confirmationUrl = contextPath + "/registrationConfirm.html?token=" + newToken.getToken();
+        final String confirmationUrl = contextPath + "/user/registration/activation?token=" + newToken.getToken();
         final String message = messages.getMessage("message.resendToken", null, locale);
         return constructEmail("Resend Registration Token", message +" \r\n" + confirmationUrl, user);
     }
