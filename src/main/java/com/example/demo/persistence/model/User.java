@@ -21,11 +21,14 @@ public class User {
     @Column(length = 60)
     private String password;
 
+    // Activated
     private boolean enabled;
 
     private boolean isUsing2FA;
 
     private String secret;
+
+    private String phoneNumber;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "users_roles", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
@@ -112,6 +115,14 @@ public class User {
         this.roles = roles;
     }
 
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -140,17 +151,17 @@ public class User {
 
     @Override
     public String toString() {
-        final StringBuilder builder = new StringBuilder();
-        builder.append("User [id=")
-                .append(id)
-                .append(", firstName=").append(firstName)
-                .append(", lastName=").append(lastName)
-                .append(", email=").append(email)
-                .append(", enabled=").append(enabled)
-                .append(", isUsing2FA=").append(isUsing2FA)
-                .append(", secret=").append(secret)
-                .append(", roles=").append(roles)
-                .append("]");
-        return builder.toString();
+        return "User{" +
+                "id=" + id +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                ", enabled=" + enabled +
+                ", isUsing2FA=" + isUsing2FA +
+                ", secret='" + secret + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", roles=" + roles +
+                '}';
     }
 }

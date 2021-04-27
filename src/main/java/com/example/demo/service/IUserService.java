@@ -21,7 +21,7 @@ public interface IUserService {
 
     void deleteUser(User user);
 
-    void createVerificationTokenForUser(User user, String token);
+    VerificationToken createVerificationTokenForUser(User user, String token);
 
     VerificationToken getVerificationToken(String VerificationToken);
 
@@ -54,4 +54,6 @@ public interface IUserService {
     String isValidNewLocationToken(String token);
 
     void addUserLocation(User user, String ip);
+
+    void activateAccount(User user);
 }
