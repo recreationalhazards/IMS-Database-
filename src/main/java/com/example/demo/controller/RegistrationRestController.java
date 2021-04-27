@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.dto.PasswordDto;
 import com.example.demo.dto.UserDto;
 import com.example.demo.error.InvalidOldPasswordException;
+import com.example.demo.error.UserAlreadyExistException;
 import com.example.demo.persistence.model.User;
 import com.example.demo.persistence.model.VerificationToken;
 import com.example.demo.security.ISecurityUserService;
@@ -22,6 +23,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.UnsupportedEncodingException;
+import java.time.Instant;
+import java.util.Date;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
@@ -54,24 +57,32 @@ public class RegistrationRestController {
 
     // Registration
     @PostMapping("/user/registration/verification")
-    public GenericResponse registerUserAccount(@RequestBody @Valid final UserDto accountDto, final HttpServletRequest request) {
+    public GenericResponse registerUserAccount(@RequestBody @Valid final UserDto accountDto, final HttpServletRequest request) throws UserAlreadyExistException {
         LOGGER.debug("Registering user account with information: {}", accountDto);
 
-        final User registered = userService.registerNewUserAccount(accountDto);
+        try {
+            final User registered = userService.registerNewUserAccount(accountDto);
+            final String token = UUID.randomUUID().toString();
+            mailSender.send(sendAccountActivationEmail(token, registered.getEmail(), registered));
+            return new GenericResponse("success");
+        } catch ( UserAlreadyExistException userAlreadyExistException ) {
+            return new GenericResponse(messages.getMessage("message.regError", null, request.getLocale()));
+        }
         // Will work on this later on
        // userService.addUserLocation(registered, getClientIP(request));
        // eventPublisher.publishEvent(new OnRegistrationCompleteEvent(registered, request.getLocale(), (String) getAppUrl(request)));
-        final String token = UUID.randomUUID().toString();
-        mailSender.send(sendAccountActivationEmail(token, registered.getEmail(), registered));
-        return new GenericResponse("success");
     }
 
     @GetMapping("/user/registration/activation")
     public GenericResponse activateUserAccount(@RequestParam final String token, final HttpServletRequest request) {
         final VerificationToken verificationToken = userService.getVerificationToken(token);
-        final User user = userService.getUser(verificationToken.getToken());
-        userService.activateAccount(user);
-        return new GenericResponse("success");
+        if (verificationToken.getExpiryDate().before(Date.from(Instant.now()))) {
+            return new GenericResponse(messages.getMessage("message.expired", null, request.getLocale()));
+        } else {
+            final User user = userService.getUser(verificationToken.getToken());
+            userService.activateAccount(user);
+            return new GenericResponse("success");
+        }
     }
 
     // User activation - verification
