@@ -323,4 +323,16 @@ public class UserService implements IUserService {
         user.setEnabled(true);
         userRepository.save(user);
     }
+
+    @Override
+    public boolean deactivateAccount(String verificationToken) {
+        final User user = getUser(verificationToken);
+        user.setEnabled(false);
+        userRepository.save(user);
+
+        if (user.isEnabled())
+            return false;
+        else
+            return true;
+    }
 }
