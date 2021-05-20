@@ -56,4 +56,6 @@ public interface IUserService {
     void addUserLocation(User user, String ip);
 
     void activateAccount(User user);
+
+    boolean deactivateAccount(String verificationToken);
 }

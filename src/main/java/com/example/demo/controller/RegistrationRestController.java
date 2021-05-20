@@ -146,6 +146,33 @@ public class RegistrationRestController {
         return null;
     }
 
+    // Inactivate account
+    @GetMapping("/user/inactivateAccount")
+    public GenericResponse inactivateAccount(@RequestParam final String verificationToken) {
+        final User user = userService.getUser(verificationToken);
+        if (userService.deactivateAccount(verificationToken))
+            return new GenericResponse("success");
+        else
+            return new GenericResponse("Error!", "account deactivation did not work");
+    }
+
+    // IMS-10 Validate and inactivate user
+    @PostMapping("/user/deactivateAccount")
+    public GenericResponse deactivateLostAccount(@RequestParam final String email) {
+        final User user = userService.findUserByEmail(email);
+        final String token = UUID.randomUUID().toString();
+        mailSender.send(sendAccountDeActivationEmail(token, user.getEmail(), user));
+        return new GenericResponse("success");
+    }
+
+    @GetMapping("user/activateAccount")
+    public GenericResponse activateAccount(@RequestParam final String email) {
+        final User registered = userService.findUserByEmail(email);
+        final String token = UUID.randomUUID().toString();
+        mailSender.send(sendAccountActivationEmail(token, registered.getEmail(), registered));
+        return new GenericResponse("success");
+    }
+
     private SimpleMailMessage sendAccountActivationEmail(final String token, final String email, final User user) {
         final String subject = "Activate your account!";
         final String url = "http://localhost:8081/user/registration/activation?token=";
@@ -153,6 +180,12 @@ public class RegistrationRestController {
         return constructEmail(subject, body, user);
     }
 
+    private SimpleMailMessage sendAccountDeActivationEmail(final String token, final String email, final User user) {
+        final String subject = "To deactivate your account, press the link below!";
+        final String url = "http://localhost:8081/user/inactivateAccount?verificationToken=";
+        final String body = url + userService.createVerificationTokenForUser(user, token).getToken();
+        return constructEmail(subject, body, user);
+    }
 
     private SimpleMailMessage constructResetTokenEmail(final String contextPath, final Locale locale, final String token, final User user) {
         final String url = contextPath + "/user/changePassword?token=" + token;
