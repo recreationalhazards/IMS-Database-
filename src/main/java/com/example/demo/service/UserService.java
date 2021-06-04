@@ -5,6 +5,7 @@ import com.example.demo.error.UserAlreadyExistException;
 import com.example.demo.persistence.dao.*;
 import com.example.demo.persistence.model.*;
 import com.maxmind.geoip2.DatabaseReader;
+import org.passay.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -25,6 +26,7 @@ import javax.transaction.Transactional;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -339,6 +341,29 @@ public class UserService implements IUserService, UserDetailsService {
             return false;
         else
             return true;
+    }
+
+    @Override
+    public String generateOneTimePassword() {
+        String upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        String lowerCase = "abcdefghijklmnopqrstuvwxyz";
+        String digitalCharacter = "0123456789";
+        String specialCharacter = "!@#$%&";
+
+        Random rnd = new Random();
+        StringBuilder sb = new StringBuilder(13);
+        for (int i = 0; i < 2; i++)
+            sb.append(upperCase.charAt(rnd.nextInt(upperCase.length())));
+
+        for (int i = 0; i < 7; i++)
+            sb.append(lowerCase.charAt(rnd.nextInt(lowerCase.length())));
+
+        for (int i = 0; i < 2; i++)
+            sb.append(digitalCharacter.charAt(rnd.nextInt(digitalCharacter.length())));
+
+        for (int i = 0; i < 2; i++)
+            sb.append(specialCharacter.charAt(rnd.nextInt(specialCharacter.length())));
+        return sb.toString();
     }
 
     @Override
