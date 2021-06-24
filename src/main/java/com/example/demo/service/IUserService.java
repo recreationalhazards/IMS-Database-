@@ -58,4 +58,9 @@ public interface IUserService {
     void activateAccount(User user);
 
     boolean deactivateAccount(String verificationToken);
+ OneTimePassword
+
+    String generateOneTimePassword();
+
+ dev
 }
