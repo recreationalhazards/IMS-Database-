@@ -106,8 +106,10 @@ public class RegistrationRestController {
 //        return new GenericResponse(messages.getMessage("message.resetPasswordEmail", null, request.getLocale()));
 //    }
 
-    @PostMapping("user/registration/getOneTimePassword")
-    public GenericResponse getOneTimePassword(final HttpServletRequest request, @RequestParam("email") final String userEmail) {
+
+    @PostMapping("/user/registration/oneTimePassword")
+    public GenericResponse recoverPassword(final HttpServletRequest request, @RequestParam("email") final String userEmail) {
+
         final User user = userService.findUserByEmail(userEmail);
 
         if (user != null) {
@@ -204,7 +206,7 @@ public class RegistrationRestController {
     }
 
     private SimpleMailMessage constructResetTokenEmail(final String contextPath, final Locale locale, final String token, final User user) {
-        final String url = contextPath + "/user/registration/getOneTimePassword?token=" + token;
+        final String url = contextPath + "/user/changePassword?token=" + token;
         final String message = messages.getMessage("message.resetPassword", null, locale);
         return constructEmail("Reset Password", message + " \r\n" + url, user);
     }
