@@ -380,6 +380,7 @@ public class UserService implements IUserService, UserDetailsService {
         else
             return true;
     }
+ OneTimePassword
 
     @Override
     public String generateOneTimePassword() {
@@ -408,4 +409,5 @@ public class UserService implements IUserService, UserDetailsService {
     public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
         return new org.springframework.security.core.userdetails.User(userDto.getEmail(), userDto.getPassword(), new ArrayList<>());
     }
+ dev
 }
