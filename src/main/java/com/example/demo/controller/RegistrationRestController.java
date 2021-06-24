@@ -95,7 +95,7 @@ public class RegistrationRestController {
     }
 
     // Send link to email after forgetting password to reset password. The link will redirect user to /user/savePassword
-    @PostMapping("/user/registration/sendOneTimePasswordLink")
+    @PostMapping("/user/registration/oneTimePassword")
     public GenericResponse recoverPassword(final HttpServletRequest request, @RequestParam("email") final String userEmail) {
         final User user = userService.findUserByEmail(userEmail);
         if (user != null) {
@@ -104,16 +104,6 @@ public class RegistrationRestController {
             mailSender.send(constructResetTokenEmail(getAppUrl(request).toString(), request.getLocale(), token, user));
         }
         return new GenericResponse(messages.getMessage("message.resetPasswordEmail", null, request.getLocale()));
-    }
-
-    @GetMapping("user/registration/getOneTimePassword")
-    public GenericResponse getOneTimePassword(@RequestParam final String token) {
-        final User registeredUser = userService.getUser(token);
-        final String oneTimePassword = userService.generateOneTimePassword();
-        userService.changeUserPassword(registeredUser, oneTimePassword);
-        SimpleMailMessage mailMessage = constructEmail("Your one time password!", "Your one time password is: " + oneTimePassword + "\n\nThank You!\nChrist Covenant Church\n(314) 839-0292", registeredUser);
-        mailSender.send(mailMessage);
-        return new GenericResponse("Your one time password has been sent to your email!");
     }
 
     // Reset password after forgetting old password
@@ -198,7 +188,7 @@ public class RegistrationRestController {
     }
 
     private SimpleMailMessage constructResetTokenEmail(final String contextPath, final Locale locale, final String token, final User user) {
-        final String url = contextPath + "/user/registration/getOneTimePassword?token=" + token;
+        final String url = contextPath + "/user/changePassword?token=" + token;
         final String message = messages.getMessage("message.resetPassword", null, locale);
         return constructEmail("Reset Password", message + " \r\n" + url, user);
     }
