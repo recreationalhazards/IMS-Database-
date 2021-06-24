@@ -1,9 +1,16 @@
-package com.example.demo.dto;
+package com.example.demo.persistence.model;
 
-import java.util.Calendar;
+import com.example.demo.validation.ValidPassword;
+
+import javax.persistence.*;
 import java.util.Date;
 
-public class PasswordDto {
+@Entity
+public class Password {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
 
     private String oldPassword;
 
@@ -13,9 +20,8 @@ public class PasswordDto {
 
     private Date expiryDate;
 
-    public PasswordDto() {
-        super();
-    }
+    @OneToOne(mappedBy = "password")
+    private User user;
 
     public String getOldPassword() {
         return oldPassword;
@@ -45,14 +51,7 @@ public class PasswordDto {
         return expiryDate;
     }
 
-    public void setExpiryDate(final int expiryTimeInMinutes) {
-        this.expiryDate = calculateExpiryDate(expiryTimeInMinutes);
-    }
-
-    private Date calculateExpiryDate(final int expiryTimeInMinutes) {
-        final Calendar cal = Calendar.getInstance();
-        cal.setTimeInMillis(new Date().getTime());
-        cal.add(Calendar.MINUTE, expiryTimeInMinutes);
-        return new Date(cal.getTime().getTime());
+    public void setExpiryDate(Date expiryDate) {
+        this.expiryDate = expiryDate;
     }
 }

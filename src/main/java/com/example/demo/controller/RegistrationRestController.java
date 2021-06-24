@@ -95,24 +95,30 @@ public class RegistrationRestController {
     }
 
     // Send link to email after forgetting password to reset password. The link will redirect user to /user/savePassword
-    @PostMapping("/user/registration/sendOneTimePasswordLink")
-    public GenericResponse recoverPassword(final HttpServletRequest request, @RequestParam("email") final String userEmail) {
-        final User user = userService.findUserByEmail(userEmail);
-        if (user != null) {
-            final String token = UUID.randomUUID().toString();
-            userService.createPasswordResetTokenForUser(user, token);
-            mailSender.send(constructResetTokenEmail(getAppUrl(request).toString(), request.getLocale(), token, user));
-        }
-        return new GenericResponse(messages.getMessage("message.resetPasswordEmail", null, request.getLocale()));
-    }
+//    @PostMapping("/user/registration/sendOneTimePasswordLink")
+//    public GenericResponse recoverPassword(final HttpServletRequest request, @RequestParam("email") final String userEmail) {
+//        final User user = userService.findUserByEmail(userEmail);
+//        if (user != null) {
+//            final String token = UUID.randomUUID().toString();
+//            userService.createPasswordResetTokenForUser(user, token);
+//            mailSender.send(constructResetTokenEmail(getAppUrl(request).toString(), request.getLocale(), token, user));
+//        }
+//        return new GenericResponse(messages.getMessage("message.resetPasswordEmail", null, request.getLocale()));
+//    }
 
-    @GetMapping("user/registration/getOneTimePassword")
-    public GenericResponse getOneTimePassword(@RequestParam final String token) {
-        final User registeredUser = userService.getUser(token);
-        final String oneTimePassword = userService.generateOneTimePassword();
-        userService.changeUserPassword(registeredUser, oneTimePassword);
-        SimpleMailMessage mailMessage = constructEmail("Your one time password!", "Your one time password is: " + oneTimePassword + "\n\nThank You!\nChrist Covenant Church\n(314) 839-0292", registeredUser);
-        mailSender.send(mailMessage);
+    @PostMapping("user/registration/getOneTimePassword")
+    public GenericResponse getOneTimePassword(final HttpServletRequest request, @RequestParam("email") final String userEmail) {
+        final User user = userService.findUserByEmail(userEmail);
+
+        if (user != null) {
+            final String tokenString = UUID.randomUUID().toString();
+            userService.createPasswordResetTokenForUser(user, tokenString);
+            final String oneTimePassword = userService.generateOneTimePassword();
+            userService.changeUserPassword(user, oneTimePassword, (60 * 24));
+            SimpleMailMessage mailMessage = constructEmail("Your one time password!", "Your one time password is: " + oneTimePassword + "\n\nThank You!\nChrist Covenant Church\n(314) 839-0292", user);
+            mailSender.send(mailMessage);
+        }
+
         return new GenericResponse("Your one time password has been sent to your email!");
     }
 
@@ -128,7 +134,7 @@ public class RegistrationRestController {
 
         Optional<User> user = userService.getUserByPasswordResetToken(passwordDto.getToken());
         if(user.isPresent()) {
-            userService.changeUserPassword(user.get(), passwordDto.getNewPassword());
+            userService.changeUserPassword(user.get(), passwordDto.getNewPassword(), (365 * 60 * 24));
             return new GenericResponse(messages.getMessage("message.resetPasswordSuc", null, locale));
         } else {
             return new GenericResponse(messages.getMessage("auth.message.invalid", null, locale));
@@ -142,7 +148,7 @@ public class RegistrationRestController {
         if (!userService.checkIfValidOldPassword(user, passwordDto.getOldPassword())) {
             throw new InvalidOldPasswordException();
         }
-        userService.changeUserPassword(user, passwordDto.getNewPassword());
+        userService.changeUserPassword(user, passwordDto.getNewPassword(), (60 * 24));
         return new GenericResponse(messages.getMessage("message.updatePasswordSuc", null, locale));
     }
 
