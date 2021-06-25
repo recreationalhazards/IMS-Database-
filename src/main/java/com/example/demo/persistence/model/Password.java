@@ -20,6 +20,8 @@ public class Password {
 
     private Date expiryDate;
 
+    private Boolean isExpired;
+
     @OneToOne(mappedBy = "password")
     private User user;
 
@@ -53,5 +55,29 @@ public class Password {
 
     public void setExpiryDate(Date expiryDate) {
         this.expiryDate = expiryDate;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Boolean getExpired() {
+        return isExpired;
+    }
+
+    public void setExpired(Boolean expired) {
+        isExpired = expired;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }
