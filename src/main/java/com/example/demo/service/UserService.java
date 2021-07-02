@@ -1,11 +1,11 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.PasswordDto;
 import com.example.demo.dto.UserDto;
 import com.example.demo.error.UserAlreadyExistException;
 import com.example.demo.persistence.dao.*;
 import com.example.demo.persistence.model.*;
 import com.maxmind.geoip2.DatabaseReader;
-import org.passay.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -15,7 +15,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,14 +25,13 @@ import javax.transaction.Transactional;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @Transactional
 @Component
-public class UserService implements IUserService, UserDetailsService {
+public class UserService implements IUserService {
 
     @Autowired
     private UserRepository userRepository;
@@ -67,9 +65,10 @@ public class UserService implements IUserService, UserDetailsService {
     private NewLocationTokenRepository newLocationTokenRepository;
 
     @Autowired
-    private Environment env;
+    private PasswordRepository passwordRepository;
 
-    private UserDto userDto;
+    @Autowired
+    private Environment env;
 
     private static final String TOKEN_INVALID = "invalidToken";
     private static final String TOKEN_EXPIRED = "expired";
@@ -78,9 +77,10 @@ public class UserService implements IUserService, UserDetailsService {
     public static String QR_PREFIX = "https://chart.googleapis.com/chart?chs=200x200&chld=M%%7C0&cht=qr&chl=";
     public static String APP_NAME = "SpringRegistration";
 
-    public UserService(UserRepository userRepository, RoleRepository roleRepository) {
+    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordRepository passwordRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.passwordRepository = passwordRepository;
     }
 
     // API
@@ -98,16 +98,37 @@ public class UserService implements IUserService, UserDetailsService {
 
     public User userDtoToUser(final UserDto accountDto) {
         final User user = new User();
+        final PasswordDto passwordDto = new PasswordDto();
+        String salt = generateSalt();
+        passwordDto.setNewPassword(passwordEncoder.encode(salt + accountDto.getPassword()));
+        passwordDto.setExpiryDate(365 * 24 * 60);
+        Password password = passwordDtoToPasswordConversion(passwordDto);
+        passwordRepository.save(password);
 
         user.setFirstName(accountDto.getFirstName());
         user.setLastName(accountDto.getLastName());
-        user.setPassword(passwordEncoder.encode(accountDto.getPassword()));
+        user.setPassword(password);
         user.setEmail(accountDto.getEmail());
         user.setUsing2FA(accountDto.isUsing2FA());
         user.setRoles(Arrays.asList(roleRepository.findByName("ROLE_USER")));
         user.setPhoneNumber(accountDto.getPhoneNumber());
+        user.setSecret(salt);
 
         return user;
+    }
+
+    private Password passwordDtoToPasswordConversion(PasswordDto passwordDto) {
+        Password password = new Password();
+        password.setNewPassword(passwordDto.getNewPassword());
+        password.setOldPassword(passwordDto.getOldPassword());
+        password.setExpiryDate(passwordDto.getExpiryDate());
+        password.setToken(passwordDto.getToken());
+        return password;
+    }
+
+    private String generateSalt() {
+        String salt = generateOneTimePassword();
+        return salt;
     }
 
     private boolean emailExists(final String email) {
@@ -191,14 +212,25 @@ public class UserService implements IUserService, UserDetailsService {
     }
 
     @Override
-    public void changeUserPassword(final User user, final String password) {
-        user.setPassword(passwordEncoder.encode(password));
+    public void changeUserPassword(final User user, final String password, int expiryMinutes) {
+        Password passwordEntity = user.getPassword();
+
+        final Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(new Date().getTime());
+        cal.add(Calendar.MINUTE, expiryMinutes);
+
+        String salt = generateSalt();
+        passwordEntity.setOldPassword(passwordEntity.getNewPassword());
+        user.setSecret(salt);
+        passwordEntity.setNewPassword(passwordEncoder.encode(salt + password));
+        passwordEntity.setExpiryDate(new Date(cal.getTime().getTime()));
+        user.setPassword(passwordEntity);
         userRepository.save(user);
     }
 
     @Override
     public boolean checkIfValidOldPassword(final User user, String oldPassword) {
-        return passwordEncoder.matches(oldPassword, user.getPassword());
+        return passwordEncoder.matches(oldPassword, user.getPassword().getNewPassword());
     }
 
     @Override
@@ -342,7 +374,6 @@ public class UserService implements IUserService, UserDetailsService {
         else
             return true;
     }
- OneTimePassword
 
     @Override
     public String generateOneTimePassword() {
@@ -366,10 +397,5 @@ public class UserService implements IUserService, UserDetailsService {
             sb.append(specialCharacter.charAt(rnd.nextInt(specialCharacter.length())));
         return sb.toString();
     }
-
-    @Override
-    public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
-        return new org.springframework.security.core.userdetails.User(userDto.getEmail(), userDto.getPassword(), new ArrayList<>());
-    }
- dev
+    
 }

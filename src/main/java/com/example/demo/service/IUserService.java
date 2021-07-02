@@ -37,7 +37,7 @@ public interface IUserService {
 
     Optional<User> getUserByID(long id);
 
-    void changeUserPassword(User user, String password);
+    void changeUserPassword(User user, String password, int expiryMinutes);
 
     boolean checkIfValidOldPassword(User user, String password);
 
@@ -58,9 +58,8 @@ public interface IUserService {
     void activateAccount(User user);
 
     boolean deactivateAccount(String verificationToken);
- OneTimePassword
+
 
     String generateOneTimePassword();
 
- dev
 }

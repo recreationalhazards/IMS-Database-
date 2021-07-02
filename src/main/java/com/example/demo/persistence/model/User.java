@@ -18,8 +18,9 @@ public class User {
 
     private String email;
 
-    @Column(length = 60)
-    private String password;
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "password_id", referencedColumnName = "id")
+    private Password password;
 
     // Activated
     private boolean enabled;
@@ -75,13 +76,6 @@ public class User {
         this.email = email;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
 
     public boolean isEnabled() {
         return enabled;
@@ -121,6 +115,14 @@ public class User {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public Password getPassword() {
+        return password;
+    }
+
+    public void setPassword(Password password) {
+        this.password = password;
     }
 
     @Override
