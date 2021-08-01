@@ -30,6 +30,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @RestController
+//@CrossOrigin(origins = "http://localhost:3000")
 public class RegistrationRestController {
 
     private final Logger LOGGER = LoggerFactory.getLogger(getClass());
