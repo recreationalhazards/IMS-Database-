@@ -15,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,7 +32,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 @Component
-public class UserService implements IUserService {
+public class UserService implements IUserService, UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
@@ -100,7 +101,7 @@ public class UserService implements IUserService {
         final User user = new User();
         final PasswordDto passwordDto = new PasswordDto();
         String salt = generateSalt();
-        passwordDto.setNewPassword(passwordEncoder.encode(salt + accountDto.getPassword()));
+        passwordDto.setNewPassword(passwordEncoder.encode(accountDto.getPassword()));
         passwordDto.setExpiryDate(365 * 24 * 60);
         Password password = passwordDtoToPasswordConversion(passwordDto);
         passwordRepository.save(password);
@@ -397,5 +398,10 @@ public class UserService implements IUserService {
             sb.append(specialCharacter.charAt(rnd.nextInt(specialCharacter.length())));
         return sb.toString();
     }
-    
+
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = userRepository.findByEmail(email);
+        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword().getNewPassword(), new ArrayList<>());
+    }
 }

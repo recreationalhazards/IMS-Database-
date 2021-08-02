@@ -56,6 +56,12 @@ public class RegistrationRestController {
         super();
     }
 
+    // endpoint to test if jwt token auth is working
+    @GetMapping("/test")
+    public String getTest() {
+        return "Test Works";
+    }
+
     // Registration
     @PostMapping("/user/registration/verification")
     public GenericResponse registerUserAccount(@RequestBody @Valid final UserDto accountDto, final HttpServletRequest request) throws UserAlreadyExistException {
