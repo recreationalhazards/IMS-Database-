@@ -1,8 +1,5 @@
 package com.example.demo.security;
 
-import org.springframework.stereotype.Service;
-
-import javax.persistence.Entity;
 import java.util.ArrayList;
 import java.util.List;
 

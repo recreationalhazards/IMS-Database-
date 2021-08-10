@@ -6,12 +6,14 @@ import com.example.demo.error.UserAlreadyExistException;
 import com.example.demo.persistence.dao.*;
 import com.example.demo.persistence.model.*;
 import com.maxmind.geoip2.DatabaseReader;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -32,6 +34,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 @Component
+@Slf4j
 public class UserService implements IUserService, UserDetailsService {
 
     @Autowired
@@ -86,6 +89,10 @@ public class UserService implements IUserService, UserDetailsService {
 
     // API
 
+
+    public UserService() {
+    }
+
     @Override
     public User registerNewUserAccount(final UserDto accountDto) throws UserAlreadyExistException {
         if (emailExists(accountDto.getEmail())) {
@@ -97,24 +104,70 @@ public class UserService implements IUserService, UserDetailsService {
         return userRepository.save(user);
     }
 
-    public User userDtoToUser(final UserDto accountDto) {
+    public User userDtoToUser(final UserDto userDto) {
         final User user = new User();
         final PasswordDto passwordDto = new PasswordDto();
         String salt = generateSalt();
-        passwordDto.setNewPassword(passwordEncoder.encode(accountDto.getPassword()));
+        passwordDto.setNewPassword(passwordEncoder.encode(userDto.getPassword()));
         passwordDto.setExpiryDate(365 * 24 * 60);
         Password password = passwordDtoToPasswordConversion(passwordDto);
         passwordRepository.save(password);
 
-        user.setFirstName(accountDto.getFirstName());
-        user.setLastName(accountDto.getLastName());
+        user.setFirstName(userDto.getFirstName());
+        user.setLastName(userDto.getLastName());
         user.setPassword(password);
-        user.setEmail(accountDto.getEmail());
-        user.setUsing2FA(accountDto.isUsing2FA());
-        user.setRoles(Arrays.asList(roleRepository.findByName("ROLE_USER")));
-        user.setPhoneNumber(accountDto.getPhoneNumber());
+        user.setEmail(userDto.getEmail());
+        user.setUsing2FA(userDto.isUsing2FA());
+        giveUserARole(userDto, user);
+        user.setPhoneNumber(userDto.getPhoneNumber());
         user.setSecret(salt);
 
+        return user;
+    }
+
+    private User giveUserARole(final UserDto userDto, User user) {
+        List<Role> roleList = roleRepository.findAll();
+        if (roleList.size() < 4) {
+            roleRepository.deleteAll();
+            Role admin = new Role();
+            admin.setName("ROLE_ADMIN");
+            Role regularUser = new Role();
+            regularUser.setName("ROLE_USER");
+            Role regularManager = new Role();
+            regularManager.setName("ROLE_MANAGER");
+            Role regularSuperAdmin = new Role();
+            regularSuperAdmin.setName("ROLE_SUPER_ADMIN");
+            List<Role> roles = new ArrayList<>();
+            roles.add(admin);
+            roles.add(regularUser);
+            roles.add(regularManager);
+            roles.add(regularSuperAdmin);
+            roleRepository.saveAll(roles);
+        } else {
+            Role admin = roleRepository.findByName("ROLE_ADMIN");
+            Role regularUser = roleRepository.findByName("ROLE_USER");
+            Role regularManager = roleRepository.findByName("ROLE_MANAGER");
+            Role regularSuperAdmin = roleRepository.findByName("ROLE_SUPER_ADMIN");
+            Collection<Role> roles = new ArrayList<>();
+
+            if  (userDto.getRole().equalsIgnoreCase(null) || userDto.getRole().isEmpty() || userDto.getRole().equalsIgnoreCase("ROLE_USER".toUpperCase(Locale.ROOT))) {
+                roles.add(regularUser);
+            }   else if (userDto.getRole().equalsIgnoreCase("ROLE_ADMIN".toUpperCase(Locale.ROOT))) {
+                roles.add(admin);
+                roles.add(regularUser);
+            }   else if (userDto.getRole().equalsIgnoreCase("ROLE_MANAGER".toUpperCase(Locale.ROOT))) {
+                roles.add(regularManager);
+                roles.add(regularUser);
+                roles.add(admin);
+            }   else if (userDto.getRole().equalsIgnoreCase("ROLE_SUPER_ADMIN".toUpperCase(Locale.ROOT))) {
+                roles.add(regularSuperAdmin);
+                roles.add(regularUser);
+                roles.add(regularManager);
+                roles.add(admin);
+            }
+
+            user.setRoles(roles);
+        }
         return user;
     }
 
@@ -402,6 +455,16 @@ public class UserService implements IUserService, UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email);
+        if (user == null) {
+            log.error("User not found in the database");
+            throw new UsernameNotFoundException("User not found in the database");
+        } else {
+            log.info("User found in the database: {}", email);
+        }
+        Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        user.getRoles().forEach(role -> {
+            authorities.add(new SimpleGrantedAuthority(role.getName()));
+        });
         return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword().getNewPassword(), new ArrayList<>());
     }
 }
