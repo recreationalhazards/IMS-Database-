@@ -1,18 +1,18 @@
 package com.example.demo.validation;
 
 
+import com.google.common.base.Joiner;
+import org.passay.*;
+
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import java.util.Arrays;
-
-import com.google.common.base.Joiner;
-import org.passay.*;
 
 public class PasswordConstraintValidator implements ConstraintValidator<ValidPassword, String> {
 
     /**
      * Initializes the validator in preparation for
-     *  calls.
+     * calls.
      * The constraint annotation for a given constraint declaration
      * is passed.
      * <p>
@@ -35,8 +35,8 @@ public class PasswordConstraintValidator implements ConstraintValidator<ValidPas
      * This method can be accessed concurrently, thread-safety must be ensured
      * by the implementation.
      *
-     * @param password   object to validate
-     * @param context context in which the constraint is evaluated
+     * @param password object to validate
+     * @param context  context in which the constraint is evaluated
      * @return {@code false} if {@code value} does not pass the constraint
      */
     @Override
@@ -48,9 +48,9 @@ public class PasswordConstraintValidator implements ConstraintValidator<ValidPas
                 new UppercaseCharacterRule(1),
                 new DigitCharacterRule(1),
                 new SpecialCharacterRule(1),
-                new NumericalSequenceRule(3,false),
-                new AlphabeticalSequenceRule(3,false),
-                new QwertySequenceRule(3,false),
+                new NumericalSequenceRule(3, false),
+                new AlphabeticalSequenceRule(3, false),
+                new QwertySequenceRule(3, false),
                 new WhitespaceRule()));
         final RuleResult result = validator.validate(new PasswordData(password));
         if (result.isValid()) {

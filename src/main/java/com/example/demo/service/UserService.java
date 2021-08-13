@@ -37,49 +37,36 @@ import java.util.stream.Collectors;
 @Slf4j
 public class UserService implements IUserService, UserDetailsService {
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private VerificationTokenRepository tokenRepository;
-
-    @Autowired
-    private PasswordResetTokenRepository passwordTokenRepository;
-
-    @Bean
-    private PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    };
-
-    @Autowired
-    private PasswordEncoder passwordEncoder = passwordEncoder();
-
-    @Autowired
-    private RoleRepository roleRepository;
-
-    private SessionRegistry sessionRegistry;
-
-    @Qualifier("GeoIPCountry")
-    private DatabaseReader databaseReader;
-
-    @Autowired
-    private UserLocationRepository userLocationRepository;
-
-    @Autowired
-    private NewLocationTokenRepository newLocationTokenRepository;
-
-    @Autowired
-    private PasswordRepository passwordRepository;
-
-    @Autowired
-    private Environment env;
-
     private static final String TOKEN_INVALID = "invalidToken";
     private static final String TOKEN_EXPIRED = "expired";
     private static final String TOKEN_VALID = "valid";
-
     public static String QR_PREFIX = "https://chart.googleapis.com/chart?chs=200x200&chld=M%%7C0&cht=qr&chl=";
+
+    ;
     public static String APP_NAME = "SpringRegistration";
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private VerificationTokenRepository tokenRepository;
+    @Autowired
+    private PasswordResetTokenRepository passwordTokenRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder = passwordEncoder();
+    @Autowired
+    private RoleRepository roleRepository;
+    private SessionRegistry sessionRegistry;
+    @Qualifier("GeoIPCountry")
+    private DatabaseReader databaseReader;
+    @Autowired
+    private UserLocationRepository userLocationRepository;
+    @Autowired
+    private NewLocationTokenRepository newLocationTokenRepository;
+    @Autowired
+    private PasswordRepository passwordRepository;
+    @Autowired
+    private Environment env;
+    public UserService() {
+    }
 
 //    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordRepository passwordRepository) {
 //        this.userRepository = userRepository;
@@ -89,8 +76,9 @@ public class UserService implements IUserService, UserDetailsService {
 
     // API
 
-
-    public UserService() {
+    @Bean
+    private PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
     @Override
@@ -99,7 +87,7 @@ public class UserService implements IUserService, UserDetailsService {
             throw new UserAlreadyExistException("There is an account with that email address: " + accountDto.getEmail());
         }
 
-          final User user = userDtoToUser(accountDto);
+        final User user = userDtoToUser(accountDto);
 
         return userRepository.save(user);
     }
@@ -150,16 +138,16 @@ public class UserService implements IUserService, UserDetailsService {
             Role regularSuperAdmin = roleRepository.findByName("ROLE_SUPER_ADMIN");
             Collection<Role> roles = new ArrayList<>();
 
-            if  (userDto.getRole().equalsIgnoreCase(null) || userDto.getRole().isEmpty() || userDto.getRole().equalsIgnoreCase("ROLE_USER".toUpperCase(Locale.ROOT))) {
+            if (userDto.getRole().equalsIgnoreCase(null) || userDto.getRole().isEmpty() || userDto.getRole().equalsIgnoreCase("ROLE_USER".toUpperCase(Locale.ROOT))) {
                 roles.add(regularUser);
-            }   else if (userDto.getRole().equalsIgnoreCase("ROLE_ADMIN".toUpperCase(Locale.ROOT))) {
+            } else if (userDto.getRole().equalsIgnoreCase("ROLE_ADMIN".toUpperCase(Locale.ROOT))) {
                 roles.add(admin);
                 roles.add(regularUser);
-            }   else if (userDto.getRole().equalsIgnoreCase("ROLE_MANAGER".toUpperCase(Locale.ROOT))) {
+            } else if (userDto.getRole().equalsIgnoreCase("ROLE_MANAGER".toUpperCase(Locale.ROOT))) {
                 roles.add(regularManager);
                 roles.add(regularUser);
                 roles.add(admin);
-            }   else if (userDto.getRole().equalsIgnoreCase("ROLE_SUPER_ADMIN".toUpperCase(Locale.ROOT))) {
+            } else if (userDto.getRole().equalsIgnoreCase("ROLE_SUPER_ADMIN".toUpperCase(Locale.ROOT))) {
                 roles.add(regularSuperAdmin);
                 roles.add(regularUser);
                 roles.add(regularManager);
@@ -211,7 +199,7 @@ public class UserService implements IUserService, UserDetailsService {
             tokenRepository.delete(verificationToken);
         }
 
-        final  PasswordResetToken passwordToken = passwordTokenRepository.findByUser(user);
+        final PasswordResetToken passwordToken = passwordTokenRepository.findByUser(user);
 
         if (passwordToken != null) {
             passwordTokenRepository.delete(passwordToken);
@@ -344,7 +332,7 @@ public class UserService implements IUserService, UserDetailsService {
     @Override
     public NewLocationToken isNewLoginLocation(String username, String ip) {
 
-        if(!isGeoIpLibEnabled()) {
+        if (!isGeoIpLibEnabled()) {
             return null;
         }
 
@@ -380,7 +368,7 @@ public class UserService implements IUserService, UserDetailsService {
 
     @Override
     public String isValidNewLocationToken(String token) {
-        final  NewLocationToken locToken = newLocationTokenRepository.findByToken(token);
+        final NewLocationToken locToken = newLocationTokenRepository.findByToken(token);
         if (locToken == null) {
             return null;
         }
@@ -394,7 +382,7 @@ public class UserService implements IUserService, UserDetailsService {
     @Override
     public void addUserLocation(User user, String ip) {
 
-        if(!isGeoIpLibEnabled()) {
+        if (!isGeoIpLibEnabled()) {
             return;
         }
 
@@ -403,7 +391,7 @@ public class UserService implements IUserService, UserDetailsService {
             final String country = databaseReader.country(ipAddress)
                     .getCountry()
                     .getName();
-            UserLocation loc =  new UserLocation(country, user);
+            UserLocation loc = new UserLocation(country, user);
             loc.setEnabled(true);
             userLocationRepository.save(loc);
         } catch ( final Exception e ) {

@@ -1,7 +1,5 @@
 package com.example.demo.persistence.model;
 
-import com.example.demo.validation.ValidPassword;
-
 import javax.persistence.*;
 import java.util.Date;
 
