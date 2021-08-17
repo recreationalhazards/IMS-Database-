@@ -30,6 +30,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @RestController
+//@CrossOrigin(origins = "http://localhost:3000")
 public class RegistrationRestController {
 
     private final Logger LOGGER = LoggerFactory.getLogger(getClass());
@@ -55,6 +56,12 @@ public class RegistrationRestController {
         super();
     }
 
+    // endpoint to test if jwt token auth is working
+    @GetMapping("/test")
+    public String getTest() {
+        return "Test Works";
+    }
+
     // Registration
     @PostMapping("/user/registration/verification")
     public GenericResponse registerUserAccount(@RequestBody @Valid final UserDto accountDto, final HttpServletRequest request) throws UserAlreadyExistException {
@@ -69,8 +76,8 @@ public class RegistrationRestController {
             return new GenericResponse(messages.getMessage("message.regError", null, request.getLocale()));
         }
         // Will work on this later on
-       // userService.addUserLocation(registered, getClientIP(request));
-       // eventPublisher.publishEvent(new OnRegistrationCompleteEvent(registered, request.getLocale(), (String) getAppUrl(request)));
+        // userService.addUserLocation(registered, getClientIP(request));
+        // eventPublisher.publishEvent(new OnRegistrationCompleteEvent(registered, request.getLocale(), (String) getAppUrl(request)));
     }
 
     @GetMapping("/user/registration/activation")
@@ -130,12 +137,12 @@ public class RegistrationRestController {
 
         final String result = securityUserService.validatePasswordResetToken(passwordDto.getToken());
 
-        if(result != null) {
+        if (result != null) {
             return new GenericResponse(messages.getMessage("auth.message." + result, null, locale));
         }
 
         Optional<User> user = userService.getUserByPasswordResetToken(passwordDto.getToken());
-        if(user.isPresent()) {
+        if (user.isPresent()) {
             userService.changeUserPassword(user.get(), passwordDto.getNewPassword(), (365 * 60 * 24));
             return new GenericResponse(messages.getMessage("message.resetPasswordSuc", null, locale));
         } else {
@@ -214,7 +221,7 @@ public class RegistrationRestController {
     private SimpleMailMessage constructResendVerificationTokenEmail(final String contextPath, final Locale locale, final VerificationToken newToken, final User user) {
         final String confirmationUrl = contextPath + "/user/registration/activation?token=" + newToken.getToken();
         final String message = messages.getMessage("message.resendToken", null, locale);
-        return constructEmail("Resend Registration Token", message +" \r\n" + confirmationUrl, user);
+        return constructEmail("Resend Registration Token", message + " \r\n" + confirmationUrl, user);
     }
 
     private SimpleMailMessage constructEmail(String subject, String body, User user) {

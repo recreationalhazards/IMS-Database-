@@ -8,9 +8,10 @@ import java.util.regex.Pattern;
 public class EmailValidator implements ConstraintValidator<ValidEmail, String> {
     private static final String EMAIL_PATTERN = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@" + "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
     private static final Pattern PATTERN = Pattern.compile(EMAIL_PATTERN);
+
     /**
      * Initializes the validator in preparation for
-     *  calls.
+     * calls.
      * The constraint annotation for a given constraint declaration
      * is passed.
      * <p>
@@ -33,8 +34,8 @@ public class EmailValidator implements ConstraintValidator<ValidEmail, String> {
      * This method can be accessed concurrently, thread-safety must be ensured
      * by the implementation.
      *
-     * @param username   object to validate
-     * @param context context in which the constraint is evaluated
+     * @param username object to validate
+     * @param context  context in which the constraint is evaluated
      * @return {@code false} if {@code value} does not pass the constraint
      */
     @Override

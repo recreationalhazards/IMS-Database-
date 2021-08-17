@@ -31,7 +31,7 @@ public class PasswordMatchesValidator implements ConstraintValidator<PasswordMat
      * This method can be accessed concurrently, thread-safety must be ensured
      * by the implementation.
      *
-     * @param obj   object to validate
+     * @param obj     object to validate
      * @param context context in which the constraint is evaluated
      * @return {@code false} if {@code value} does not pass the constraint
      */

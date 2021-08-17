@@ -31,7 +31,7 @@ public class UserDto {
 
     private boolean isUsing2FA;
 
-    private Integer role;
+    private String role;
 
     private String phoneNumber;
 
@@ -43,11 +43,11 @@ public class UserDto {
         this.email = email;
     }
 
-    public Integer getRole() {
+    public String getRole() {
         return role;
     }
 
-    public void setRole(final Integer role) {
+    public void setRole(String role) {
         this.role = role;
     }
 
