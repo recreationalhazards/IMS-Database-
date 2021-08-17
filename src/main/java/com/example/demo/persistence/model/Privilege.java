@@ -1,9 +1,12 @@
 package com.example.demo.persistence.model;
 
+import lombok.Data;
+
 import javax.persistence.*;
 import java.util.Collection;
 
 @Entity
+@Data
 public class Privilege {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -21,32 +24,6 @@ public class Privilege {
     public Privilege(final String name) {
         super();
         this.name = name;
-    }
-
-    //
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(final Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(final String name) {
-        this.name = name;
-    }
-
-    public Collection<Role> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(final Collection<Role> roles) {
-        this.roles = roles;
     }
 
     @Override
