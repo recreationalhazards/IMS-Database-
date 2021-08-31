@@ -5,8 +5,10 @@ import com.maxmind.geoip2.DatabaseReader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.stereotype.Service;
 import ua_parser.Parser;
 
+@Service
 public class DeviceService {
 
     private static final String UNKNOWN = "UNKNOWN";

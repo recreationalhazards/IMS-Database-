@@ -42,7 +42,6 @@ public class UserService implements IUserService, UserDetailsService {
     private static final String TOKEN_VALID = "valid";
     public static String QR_PREFIX = "https://chart.googleapis.com/chart?chs=200x200&chld=M%%7C0&cht=qr&chl=";
 
-    ;
     public static String APP_NAME = "SpringRegistration";
     @Autowired
     private UserRepository userRepository;
@@ -67,12 +66,6 @@ public class UserService implements IUserService, UserDetailsService {
     private Environment env;
     public UserService() {
     }
-
-//    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordRepository passwordRepository) {
-//        this.userRepository = userRepository;
-//        this.roleRepository = roleRepository;
-//        this.passwordRepository = passwordRepository;
-//    }
 
     // API
 
