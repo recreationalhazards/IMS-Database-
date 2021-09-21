@@ -76,9 +76,6 @@ public class RegistrationRestControllerImpl implements RegistrationRestControlle
         } catch ( UserAlreadyExistException userAlreadyExistException ) {
             return new GenericResponse(messages.getMessage("message.regError", null, request.getLocale()));
         }
-        // Will work on this later on
-        // userService.addUserLocation(registered, getClientIP(request));
-        // eventPublisher.publishEvent(new OnRegistrationCompleteEvent(registered, request.getLocale(), (String) getAppUrl(request)));
     }
 
     @GetMapping("/user/registration/activation")
@@ -101,19 +98,6 @@ public class RegistrationRestControllerImpl implements RegistrationRestControlle
         mailSender.send(registrationUtil.constructResendVerificationTokenEmail((registrationUtil.getAppUrl(request).toString()), request.getLocale(), newToken, user));
         return new GenericResponse(messages.getMessage("message.resendToken", null, request.getLocale()));
     }
-
-    // Send link to email after forgetting password to reset password. The link will redirect user to /user/savePassword
-//    @PostMapping("/user/registration/sendOneTimePasswordLink")
-//    public GenericResponse recoverPassword(final HttpServletRequest request, @RequestParam("email") final String userEmail) {
-//        final User user = userService.findUserByEmail(userEmail);
-//        if (user != null) {
-//            final String token = UUID.randomUUID().toString();
-//            userService.createPasswordResetTokenForUser(user, token);
-//            mailSender.send(constructResetTokenEmail(getAppUrl(request).toString(), request.getLocale(), token, user));
-//        }
-//        return new GenericResponse(messages.getMessage("message.resetPasswordEmail", null, request.getLocale()));
-//    }
-
 
     @PostMapping("/user/registration/oneTimePassword")
     public GenericResponse recoverPassword(final HttpServletRequest request, @RequestParam("email") final String userEmail) {
