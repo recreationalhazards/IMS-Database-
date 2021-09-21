@@ -1,6 +1,6 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.UserDto;
+import com.example.demo.persistence.model.dto.UserDto;
 import com.example.demo.error.UserAlreadyExistException;
 import com.example.demo.persistence.model.NewLocationToken;
 import com.example.demo.persistence.model.PasswordResetToken;
@@ -58,8 +58,4 @@ public interface IUserService {
     void activateAccount(User user);
 
     boolean deactivateAccount(String verificationToken);
-
-
-    String generateOneTimePassword();
-
 }

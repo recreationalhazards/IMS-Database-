@@ -1,10 +1,11 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.PasswordDto;
-import com.example.demo.dto.UserDto;
+import com.example.demo.persistence.model.dto.PasswordDto;
+import com.example.demo.persistence.model.dto.UserDto;
 import com.example.demo.error.UserAlreadyExistException;
 import com.example.demo.persistence.dao.*;
 import com.example.demo.persistence.model.*;
+import com.example.demo.util.UserServiceUtil;
 import com.maxmind.geoip2.DatabaseReader;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,6 +65,9 @@ public class UserService implements IUserService, UserDetailsService {
     private PasswordRepository passwordRepository;
     @Autowired
     private Environment env;
+    @Autowired
+    private UserServiceUtil userServiceUtil;
+
     public UserService() {
     }
 
@@ -80,30 +84,9 @@ public class UserService implements IUserService, UserDetailsService {
             throw new UserAlreadyExistException("There is an account with that email address: " + accountDto.getEmail());
         }
 
-        final User user = userDtoToUser(accountDto);
+        final User user = userServiceUtil.userDtoToUser(accountDto);
 
         return userRepository.save(user);
-    }
-
-    public User userDtoToUser(final UserDto userDto) {
-        final User user = new User();
-        final PasswordDto passwordDto = new PasswordDto();
-        String salt = generateSalt();
-        passwordDto.setNewPassword(passwordEncoder.encode(userDto.getPassword()));
-        passwordDto.setExpiryDate(365 * 24 * 60);
-        Password password = passwordDtoToPasswordConversion(passwordDto);
-        passwordRepository.save(password);
-
-        user.setFirstName(userDto.getFirstName());
-        user.setLastName(userDto.getLastName());
-        user.setPassword(password);
-        user.setEmail(userDto.getEmail());
-        user.setUsing2FA(userDto.isUsing2FA());
-        giveUserARole(userDto, user);
-        user.setPhoneNumber(userDto.getPhoneNumber());
-        user.setSecret(salt);
-
-        return user;
     }
 
     private User giveUserARole(final UserDto userDto, User user) {
@@ -150,20 +133,6 @@ public class UserService implements IUserService, UserDetailsService {
             user.setRoles(roles);
         }
         return user;
-    }
-
-    private Password passwordDtoToPasswordConversion(PasswordDto passwordDto) {
-        Password password = new Password();
-        password.setNewPassword(passwordDto.getNewPassword());
-        password.setOldPassword(passwordDto.getOldPassword());
-        password.setExpiryDate(passwordDto.getExpiryDate());
-        password.setToken(passwordDto.getToken());
-        return password;
-    }
-
-    private String generateSalt() {
-        String salt = generateOneTimePassword();
-        return salt;
     }
 
     private boolean emailExists(final String email) {
@@ -254,7 +223,7 @@ public class UserService implements IUserService, UserDetailsService {
         cal.setTimeInMillis(new Date().getTime());
         cal.add(Calendar.MINUTE, expiryMinutes);
 
-        String salt = generateSalt();
+        String salt = userServiceUtil.generateSalt();
         passwordEntity.setOldPassword(passwordEntity.getNewPassword());
         user.setSecret(salt);
         passwordEntity.setNewPassword(passwordEncoder.encode(salt + password));
@@ -408,29 +377,6 @@ public class UserService implements IUserService, UserDetailsService {
             return false;
         else
             return true;
-    }
-
-    @Override
-    public String generateOneTimePassword() {
-        String upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        String lowerCase = "abcdefghijklmnopqrstuvwxyz";
-        String digitalCharacter = "0123456789";
-        String specialCharacter = "!@#$%&";
-
-        Random rnd = new Random();
-        StringBuilder sb = new StringBuilder(13);
-        for (int i = 0; i < 2; i++)
-            sb.append(upperCase.charAt(rnd.nextInt(upperCase.length())));
-
-        for (int i = 0; i < 7; i++)
-            sb.append(lowerCase.charAt(rnd.nextInt(lowerCase.length())));
-
-        for (int i = 0; i < 2; i++)
-            sb.append(digitalCharacter.charAt(rnd.nextInt(digitalCharacter.length())));
-
-        for (int i = 0; i < 2; i++)
-            sb.append(specialCharacter.charAt(rnd.nextInt(specialCharacter.length())));
-        return sb.toString();
     }
 
     @Override

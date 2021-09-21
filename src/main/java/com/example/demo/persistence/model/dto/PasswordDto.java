@@ -1,4 +1,4 @@
-package com.example.demo.dto;
+package com.example.demo.persistence.model.dto;
 
 import java.util.Calendar;
 import java.util.Date;
