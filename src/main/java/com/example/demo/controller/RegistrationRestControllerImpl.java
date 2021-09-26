@@ -1,22 +1,22 @@
 package com.example.demo.controller;
 
-import com.example.demo.persistence.model.dto.PasswordDto;
-import com.example.demo.persistence.model.dto.UserDto;
 import com.example.demo.error.InvalidOldPasswordException;
 import com.example.demo.error.UserAlreadyExistException;
 import com.example.demo.persistence.model.User;
 import com.example.demo.persistence.model.VerificationToken;
+import com.example.demo.persistence.model.dto.PasswordDto;
+import com.example.demo.persistence.model.dto.UserDto;
 import com.example.demo.security.ISecurityUserService;
 import com.example.demo.service.IUserService;
 import com.example.demo.util.GenericResponse;
 import com.example.demo.util.RegistrationUtil;
 import com.example.demo.util.UserServiceUtil;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.MessageSource;
-import org.springframework.core.env.Environment;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -34,34 +34,19 @@ import java.util.UUID;
 
 @RestController
 @Component
-public class RegistrationRestControllerImpl implements RegistrationRestController {
+@AllArgsConstructor
+@NoArgsConstructor
+public class RegistrationRestControllerImpl {
 
     private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
     @Autowired
-    private IUserService userService;
-
-    private ISecurityUserService securityUserService;
-
-    @Autowired
     private MessageSource messages;
-
-    @Autowired
+    private IUserService userService;
     private JavaMailSender mailSender;
-
-    @Autowired
-    private ApplicationEventPublisher eventPublisher;
-
-    @Autowired
-    private Environment env;
-    @Autowired
-    RegistrationUtil registrationUtil;
-    @Autowired
-    UserServiceUtil userServiceUtil;
-
-    public RegistrationRestControllerImpl() {
-        super();
-    }
+    private RegistrationUtil registrationUtil;
+    private ISecurityUserService securityUserService;
+    private UserServiceUtil userServiceUtil;
 
     // Registration
     @PostMapping("/user/registration/verification")
@@ -73,7 +58,7 @@ public class RegistrationRestControllerImpl implements RegistrationRestControlle
             final String token = UUID.randomUUID().toString();
             mailSender.send(registrationUtil.sendAccountActivationEmail(token, registered.getEmail(), registered));
             return new GenericResponse("success");
-        } catch ( UserAlreadyExistException userAlreadyExistException ) {
+        } catch (UserAlreadyExistException userAlreadyExistException) {
             return new GenericResponse(messages.getMessage("message.regError", null, request.getLocale()));
         }
     }

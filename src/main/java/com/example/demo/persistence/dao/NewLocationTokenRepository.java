@@ -11,5 +11,4 @@ public interface NewLocationTokenRepository extends JpaRepository<NewLocationTok
     NewLocationToken findByToken(String token);
 
     NewLocationToken findByUserLocation(UserLocation userLocation);
-
 }

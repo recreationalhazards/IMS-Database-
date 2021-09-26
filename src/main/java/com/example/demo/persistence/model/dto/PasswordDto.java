@@ -1,8 +1,11 @@
 package com.example.demo.persistence.model.dto;
 
+import lombok.Data;
+
 import java.util.Calendar;
 import java.util.Date;
 
+@Data
 public class PasswordDto {
 
     private String oldPassword;
@@ -15,34 +18,6 @@ public class PasswordDto {
 
     public PasswordDto() {
         super();
-    }
-
-    public String getOldPassword() {
-        return oldPassword;
-    }
-
-    public void setOldPassword(String oldPassword) {
-        this.oldPassword = oldPassword;
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
-
-    public String getNewPassword() {
-        return newPassword;
-    }
-
-    public void setNewPassword(String newPassword) {
-        this.newPassword = newPassword;
-    }
-
-    public Date getExpiryDate() {
-        return expiryDate;
     }
 
     public void setExpiryDate(final int expiryTimeInMinutes) {

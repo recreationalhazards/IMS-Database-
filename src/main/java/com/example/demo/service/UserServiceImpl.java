@@ -1,12 +1,12 @@
 package com.example.demo.service;
 
-import com.example.demo.persistence.model.dto.PasswordDto;
-import com.example.demo.persistence.model.dto.UserDto;
 import com.example.demo.error.UserAlreadyExistException;
 import com.example.demo.persistence.dao.*;
 import com.example.demo.persistence.model.*;
+import com.example.demo.persistence.model.dto.UserDto;
 import com.example.demo.util.UserServiceUtil;
 import com.maxmind.geoip2.DatabaseReader;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -36,48 +36,36 @@ import java.util.stream.Collectors;
 @Transactional
 @Component
 @Slf4j
-public class UserService implements IUserService, UserDetailsService {
+@NoArgsConstructor
+public class UserServiceImpl implements IUserService, UserDetailsService {
 
-    private static final String TOKEN_INVALID = "invalidToken";
-    private static final String TOKEN_EXPIRED = "expired";
     private static final String TOKEN_VALID = "valid";
+    private static final String TOKEN_EXPIRED = "expired";
+    public static String APP_NAME = "SpringRegistration";
+    private static final String TOKEN_INVALID = "invalidToken";
     public static String QR_PREFIX = "https://chart.googleapis.com/chart?chs=200x200&chld=M%%7C0&cht=qr&chl=";
 
-    public static String APP_NAME = "SpringRegistration";
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private VerificationTokenRepository tokenRepository;
-    @Autowired
-    private PasswordResetTokenRepository passwordTokenRepository;
-    @Autowired
-    private PasswordEncoder passwordEncoder = passwordEncoder();
-    @Autowired
-    private RoleRepository roleRepository;
-    private SessionRegistry sessionRegistry;
-    @Qualifier("GeoIPCountry")
-    private DatabaseReader databaseReader;
-    @Autowired
-    private UserLocationRepository userLocationRepository;
-    @Autowired
-    private NewLocationTokenRepository newLocationTokenRepository;
-    @Autowired
-    private PasswordRepository passwordRepository;
     @Autowired
     private Environment env;
+    private UserRepository userRepository;
+    @Qualifier("GeoIPCountry")
+    private DatabaseReader databaseReader;
+    private RoleRepository roleRepository;
+    private SessionRegistry sessionRegistry;
+    private VerificationTokenRepository tokenRepository;
+    private UserLocationRepository userLocationRepository;
     @Autowired
+    private PasswordEncoder passwordEncoder = passwordEncoder();
+    private PasswordResetTokenRepository passwordTokenRepository;
+    private NewLocationTokenRepository newLocationTokenRepository;
     private UserServiceUtil userServiceUtil;
-
-    public UserService() {
-    }
-
-    // API
 
     @Bean
     private PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    //Registration
     @Override
     public User registerNewUserAccount(final UserDto accountDto) throws UserAlreadyExistException {
         if (emailExists(accountDto.getEmail())) {
@@ -85,60 +73,36 @@ public class UserService implements IUserService, UserDetailsService {
         }
 
         final User user = userServiceUtil.userDtoToUser(accountDto);
-
         return userRepository.save(user);
-    }
-
-    private User giveUserARole(final UserDto userDto, User user) {
-        List<Role> roleList = roleRepository.findAll();
-        if (roleList.size() < 4) {
-            roleRepository.deleteAll();
-            Role admin = new Role();
-            admin.setName("ROLE_ADMIN");
-            Role regularUser = new Role();
-            regularUser.setName("ROLE_USER");
-            Role regularManager = new Role();
-            regularManager.setName("ROLE_MANAGER");
-            Role regularSuperAdmin = new Role();
-            regularSuperAdmin.setName("ROLE_SUPER_ADMIN");
-            List<Role> roles = new ArrayList<>();
-            roles.add(admin);
-            roles.add(regularUser);
-            roles.add(regularManager);
-            roles.add(regularSuperAdmin);
-            roleRepository.saveAll(roles);
-        } else {
-            Role admin = roleRepository.findByName("ROLE_ADMIN");
-            Role regularUser = roleRepository.findByName("ROLE_USER");
-            Role regularManager = roleRepository.findByName("ROLE_MANAGER");
-            Role regularSuperAdmin = roleRepository.findByName("ROLE_SUPER_ADMIN");
-            Collection<Role> roles = new ArrayList<>();
-
-            if (userDto.getRole().equalsIgnoreCase(null) || userDto.getRole().isEmpty() || userDto.getRole().equalsIgnoreCase("ROLE_USER".toUpperCase(Locale.ROOT))) {
-                roles.add(regularUser);
-            } else if (userDto.getRole().equalsIgnoreCase("ROLE_ADMIN".toUpperCase(Locale.ROOT))) {
-                roles.add(admin);
-                roles.add(regularUser);
-            } else if (userDto.getRole().equalsIgnoreCase("ROLE_MANAGER".toUpperCase(Locale.ROOT))) {
-                roles.add(regularManager);
-                roles.add(regularUser);
-                roles.add(admin);
-            } else if (userDto.getRole().equalsIgnoreCase("ROLE_SUPER_ADMIN".toUpperCase(Locale.ROOT))) {
-                roles.add(regularSuperAdmin);
-                roles.add(regularUser);
-                roles.add(regularManager);
-                roles.add(admin);
-            }
-
-            user.setRoles(roles);
-        }
-        return user;
     }
 
     private boolean emailExists(final String email) {
         return userRepository.findByEmail(email) != null;
     }
 
+    @Override
+    public void saveRegisteredUser(final User user) {
+        userRepository.save(user);
+    }
+
+    //Login
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = userRepository.findByEmail(email);
+        if (user == null) {
+            log.error("User not found in the database");
+            throw new UsernameNotFoundException("User not found in the database");
+        } else {
+            log.info("User found in the database: {}", email);
+        }
+        Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        user.getRoles().forEach(role -> {
+            authorities.add(new SimpleGrantedAuthority(role.getName()));
+        });
+        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword().getNewPassword(), new ArrayList<>());
+    }
+
+    //GET USER
     @Override
     public User getUser(final String verificationToken) {
         final VerificationToken token = tokenRepository.findByToken(verificationToken);
@@ -149,10 +113,16 @@ public class UserService implements IUserService, UserDetailsService {
     }
 
     @Override
-    public void saveRegisteredUser(final User user) {
-        userRepository.save(user);
+    public User findUserByEmail(final String email) {
+        return userRepository.findByEmail(email);
     }
 
+    @Override
+    public Optional<User> getUserByID(final long id) {
+        return userRepository.findById(id);
+    }
+
+    //DELETE USER
     @Override
     public void deleteUser(final User user) {
         final VerificationToken verificationToken = tokenRepository.findByUser(user);
@@ -166,19 +136,20 @@ public class UserService implements IUserService, UserDetailsService {
         if (passwordToken != null) {
             passwordTokenRepository.delete(passwordToken);
         }
-
         userRepository.delete(user);
     }
 
+
+    //TOKENIZATION
     @Override
-    public VerificationToken createVerificationTokenForUser(final User user, final String token) {
-        final VerificationToken myToken = new VerificationToken(token, user);
-        return tokenRepository.save(myToken);
+    public Optional<User> getUserByPasswordResetToken(final String token) {
+        return Optional.ofNullable(passwordTokenRepository.findByToken(token).getUser());
     }
 
     @Override
-    public VerificationToken getVerificationToken(String VerificationToken) {
-        return tokenRepository.findByToken(VerificationToken);
+    public void createPasswordResetTokenForUser(final User user, final String token) {
+        final VerificationToken myToken = new VerificationToken(token, user);
+        tokenRepository.save(myToken);
     }
 
     @Override
@@ -190,51 +161,14 @@ public class UserService implements IUserService, UserDetailsService {
     }
 
     @Override
-    public void createPasswordResetTokenForUser(final User user, final String token) {
-        final VerificationToken myToken = new VerificationToken(token, user);
-        tokenRepository.save(myToken);
+    public VerificationToken getVerificationToken(String VerificationToken) {
+        return tokenRepository.findByToken(VerificationToken);
     }
 
-    @Override
-    public User findUserByEmail(final String email) {
-        return userRepository.findByEmail(email);
-    }
-
+    //No uses of these methods
     @Override
     public PasswordResetToken getPasswordResetToken(final String token) {
         return passwordTokenRepository.findByToken(token);
-    }
-
-    @Override
-    public Optional<User> getUserByPasswordResetToken(final String token) {
-        return Optional.ofNullable(passwordTokenRepository.findByToken(token).getUser());
-    }
-
-    @Override
-    public Optional<User> getUserByID(final long id) {
-        return userRepository.findById(id);
-    }
-
-    @Override
-    public void changeUserPassword(final User user, final String password, int expiryMinutes) {
-        Password passwordEntity = user.getPassword();
-
-        final Calendar cal = Calendar.getInstance();
-        cal.setTimeInMillis(new Date().getTime());
-        cal.add(Calendar.MINUTE, expiryMinutes);
-
-        String salt = userServiceUtil.generateSalt();
-        passwordEntity.setOldPassword(passwordEntity.getNewPassword());
-        user.setSecret(salt);
-        passwordEntity.setNewPassword(passwordEncoder.encode(salt + password));
-        passwordEntity.setExpiryDate(new Date(cal.getTime().getTime()));
-        user.setPassword(passwordEntity);
-        userRepository.save(user);
-    }
-
-    @Override
-    public boolean checkIfValidOldPassword(final User user, String oldPassword) {
-        return passwordEncoder.matches(oldPassword, user.getPassword().getNewPassword());
     }
 
     @Override
@@ -258,6 +192,49 @@ public class UserService implements IUserService, UserDetailsService {
         return TOKEN_VALID;
     }
 
+    //Password
+    @Override
+    public void changeUserPassword(final User user, final String password, int expiryMinutes) {
+        Password passwordEntity = user.getPassword();
+
+        final Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(new Date().getTime());
+        cal.add(Calendar.MINUTE, expiryMinutes);
+
+        String salt = userServiceUtil.generateSalt();
+        passwordEntity.setOldPassword(passwordEntity.getNewPassword());
+        user.setSecret(salt);
+        passwordEntity.setNewPassword(passwordEncoder.encode(salt + password));
+        passwordEntity.setExpiryDate(new Date(cal.getTime().getTime()));
+        user.setPassword(passwordEntity);
+        userRepository.save(user);
+    }
+
+    @Override
+    public boolean checkIfValidOldPassword(final User user, String oldPassword) {
+        return passwordEncoder.matches(oldPassword, user.getPassword().getNewPassword());
+    }
+
+    //Activation
+    @Override
+    public void activateAccount(User user) {
+        user.setEnabled(true);
+        userRepository.save(user);
+    }
+
+    @Override
+    public boolean deactivateAccount(String verificationToken) {
+        final User user = getUser(verificationToken);
+        user.setEnabled(false);
+        userRepository.save(user);
+
+        if (user.isEnabled())
+            return false;
+        else
+            return true;
+    }
+
+    //2FA
     @Override
     public String generateQRUrl(User user) throws UnsupportedEncodingException {
         return QR_PREFIX + URLEncoder.encode(String.format("otpauth://totp/%s:%s?secret=%s&issuer=%s", APP_NAME, user.getEmail(), user.getSecret(), APP_NAME), "UTF-8");
@@ -291,6 +268,8 @@ public class UserService implements IUserService, UserDetailsService {
                 }).collect(Collectors.toList());
     }
 
+
+    //LOCATION: there are no uses of these methods as of yet
     @Override
     public NewLocationToken isNewLoginLocation(String username, String ip) {
 
@@ -309,7 +288,7 @@ public class UserService implements IUserService, UserDetailsService {
             if ((loc == null) || !loc.isEnabled()) {
                 return createNewLocationToken(country, user);
             }
-        } catch ( final Exception e ) {
+        } catch (final Exception e) {
             return null;
         }
         return null;
@@ -356,42 +335,8 @@ public class UserService implements IUserService, UserDetailsService {
             UserLocation loc = new UserLocation(country, user);
             loc.setEnabled(true);
             userLocationRepository.save(loc);
-        } catch ( final Exception e ) {
+        } catch (final Exception e) {
             throw new RuntimeException(e);
         }
-    }
-
-    @Override
-    public void activateAccount(User user) {
-        user.setEnabled(true);
-        userRepository.save(user);
-    }
-
-    @Override
-    public boolean deactivateAccount(String verificationToken) {
-        final User user = getUser(verificationToken);
-        user.setEnabled(false);
-        userRepository.save(user);
-
-        if (user.isEnabled())
-            return false;
-        else
-            return true;
-    }
-
-    @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email);
-        if (user == null) {
-            log.error("User not found in the database");
-            throw new UsernameNotFoundException("User not found in the database");
-        } else {
-            log.info("User found in the database: {}", email);
-        }
-        Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        user.getRoles().forEach(role -> {
-            authorities.add(new SimpleGrantedAuthority(role.getName()));
-        });
-        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword().getNewPassword(), new ArrayList<>());
     }
 }

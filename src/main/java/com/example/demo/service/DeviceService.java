@@ -13,7 +13,7 @@ public class DeviceService {
 
     private static final String UNKNOWN = "UNKNOWN";
 
-    @Value("${support.email}")
+//    @Value("${support.email}")
     private String from;
 
     private DeviceMetadataRepository deviceMetadataRepository;

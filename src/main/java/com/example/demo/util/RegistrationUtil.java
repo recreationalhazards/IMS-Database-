@@ -1,5 +1,6 @@
 package com.example.demo.util;
 
+import com.example.demo.persistence.dao.VerificationTokenRepository;
 import com.example.demo.persistence.model.User;
 import com.example.demo.persistence.model.VerificationToken;
 import com.example.demo.security.ISecurityUserService;
@@ -22,35 +23,32 @@ public class RegistrationUtil {
     private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
     @Autowired
-    private IUserService userService;
-
-    private ISecurityUserService securityUserService;
-
-    @Autowired
-    private MessageSource messages;
-
-    @Autowired
-    private JavaMailSender mailSender;
-
-    @Autowired
-    private ApplicationEventPublisher eventPublisher;
-
-    @Autowired
     private Environment env;
-    @Autowired
+    private MessageSource messages;
+    private IUserService userService;
     RegistrationUtil registrationUtil;
+    private JavaMailSender mailSender;
+    private ISecurityUserService securityUserService;
+    private ApplicationEventPublisher eventPublisher;
+    private VerificationTokenRepository tokenRepository;
 
+
+    private VerificationToken createVerificationTokenForUser(final User user, final String token) {
+        final VerificationToken myToken = new VerificationToken(token, user);
+        return tokenRepository.save(myToken);
+    }
+    
     public SimpleMailMessage sendAccountActivationEmail(final String token, final String email, final User user) {
         final String subject = "Activate your account!";
         final String url = "http://localhost:8081/user/registration/activation?token=";
-        final String body = url + userService.createVerificationTokenForUser(user, token).getToken();
+        final String body = url + createVerificationTokenForUser(user, token).getToken();
         return constructEmail(subject, body, user);
     }
 
     public SimpleMailMessage sendAccountDeActivationEmail(final String token, final String email, final User user) {
         final String subject = "To deactivate your account, press the link below!";
         final String url = "http://localhost:8081/user/inactivateAccount?verificationToken=";
-        final String body = url + userService.createVerificationTokenForUser(user, token).getToken();
+        final String body = url + createVerificationTokenForUser(user, token).getToken();
         return constructEmail(subject, body, user);
     }
 

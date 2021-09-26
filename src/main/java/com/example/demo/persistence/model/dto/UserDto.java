@@ -3,12 +3,15 @@ package com.example.demo.persistence.model.dto;
 import com.example.demo.validation.PasswordMatches;
 import com.example.demo.validation.ValidEmail;
 import com.example.demo.validation.ValidPassword;
+import lombok.Data;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+@Data
 @PasswordMatches
 public class UserDto {
+
     @NotNull
     @Size(min = 1, message = "{Size.userDto.firstName}")
     private String firstName;
@@ -35,68 +38,8 @@ public class UserDto {
 
     private String phoneNumber;
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(final String email) {
-        this.email = email;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(final String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(final String lastName) {
-        this.lastName = lastName;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(final String password) {
-        this.password = password;
-    }
-
-    public String getMatchingPassword() {
-        return matchingPassword;
-    }
-
-    public void setMatchingPassword(final String matchingPassword) {
-        this.matchingPassword = matchingPassword;
-    }
-
     public boolean isUsing2FA() {
         return isUsing2FA;
-    }
-
-    public void setUsing2FA(boolean isUsing2FA) {
-        this.isUsing2FA = isUsing2FA;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
     }
 
     @Override

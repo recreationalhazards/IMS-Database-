@@ -13,15 +13,16 @@ import java.util.stream.Stream;
 @Repository
 public interface VerificationTokenRepository extends JpaRepository<VerificationToken, Long> {
 
-    VerificationToken findByToken(String token);
 
     VerificationToken findByUser(User user);
 
-    Stream<VerificationToken> findAllByExpiryDateLessThan(Date now);
-
     void deleteByExpiryDateLessThan(Date now);
+
+    VerificationToken findByToken(String token);
 
     @Modifying
     @Query("delete from VerificationToken t where t.expiryDate <= ?1")
     void deleteAllExpiredSince(Date now);
+
+    Stream<VerificationToken> findAllByExpiryDateLessThan(Date now);
 }
