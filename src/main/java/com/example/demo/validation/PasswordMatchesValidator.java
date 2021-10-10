@@ -1,6 +1,6 @@
 package com.example.demo.validation;
 
-import com.example.demo.dto.UserDto;
+import com.example.demo.persistence.model.dto.UserDto;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;

@@ -5,10 +5,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface PrivilageRepository extends JpaRepository<Privilege, Long> {
-
-    Privilege findByName(String name);
+public interface PrivilegeRepository extends JpaRepository<Privilege, Long> {
 
     @Override
     void delete(Privilege privilege);
+
+    Privilege findByName(String name);
 }
