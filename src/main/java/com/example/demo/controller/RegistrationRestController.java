@@ -8,9 +8,9 @@ import com.example.demo.persistence.model.dto.PasswordDto;
 import com.example.demo.persistence.model.dto.UserDto;
 import com.example.demo.security.ISecurityUserService;
 import com.example.demo.service.IUserService;
+import com.example.demo.service.UserServiceImpl;
 import com.example.demo.util.GenericResponse;
 import com.example.demo.util.RegistrationUtil;
-import com.example.demo.util.UserServiceUtil;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.slf4j.Logger;
@@ -33,23 +33,32 @@ import java.util.Optional;
 import java.util.UUID;
 
 @RestController
-@Component
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegistrationRestControllerImpl {
+@RequestMapping("user")
+public class RegistrationRestController {
 
     private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
     @Autowired
     private MessageSource messages;
+    @Autowired
+
     private IUserService userService;
+    @Autowired
+
     private JavaMailSender mailSender;
+    @Autowired
+
     private RegistrationUtil registrationUtil;
+
     private ISecurityUserService securityUserService;
-    private UserServiceUtil userServiceUtil;
+    @Autowired
+
+    private UserServiceImpl userServiceImpl;
 
     // Registration
-    @PostMapping("/user/registration/verification")
+    @PostMapping("/registration/verification")
     public GenericResponse registerUserAccount(@RequestBody @Valid final UserDto accountDto, final HttpServletRequest request) throws UserAlreadyExistException {
         LOGGER.debug("Registering user account with information: {}", accountDto);
 
@@ -63,7 +72,7 @@ public class RegistrationRestControllerImpl {
         }
     }
 
-    @GetMapping("/user/registration/activation")
+    @GetMapping("/registration/activation")
     public GenericResponse activateUserAccount(@RequestParam final String token, final HttpServletRequest request) {
         final VerificationToken verificationToken = userService.getVerificationToken(token);
         if (verificationToken.getExpiryDate().before(Date.from(Instant.now()))) {
@@ -76,7 +85,7 @@ public class RegistrationRestControllerImpl {
     }
 
     // User activation - verification
-    @GetMapping("/user/resendRegistrationToken")
+    @GetMapping("/resendRegistrationToken")
     public GenericResponse sendRegistrationToken(final HttpServletRequest request, @RequestParam("token") final String existingToken) {
         final VerificationToken newToken = userService.generateNewVerificationToken(existingToken);
         final User user = userService.getUser(newToken.getToken());
@@ -84,7 +93,7 @@ public class RegistrationRestControllerImpl {
         return new GenericResponse(messages.getMessage("message.resendToken", null, request.getLocale()));
     }
 
-    @PostMapping("/user/registration/oneTimePassword")
+    @PostMapping("/registration/oneTimePassword")
     public GenericResponse recoverPassword(final HttpServletRequest request, @RequestParam("email") final String userEmail) {
 
         final User user = userService.findUserByEmail(userEmail);
@@ -92,7 +101,7 @@ public class RegistrationRestControllerImpl {
         if (user != null) {
             final String tokenString = UUID.randomUUID().toString();
             userService.createPasswordResetTokenForUser(user, tokenString);
-            final String oneTimePassword = userServiceUtil.generateOneTimePassword();
+            final String oneTimePassword = userServiceImpl.generateOneTimePassword();
             userService.changeUserPassword(user, oneTimePassword, (60 * 24));
             SimpleMailMessage mailMessage = registrationUtil.constructEmail("Your one time password!", "Your one time password is: " + oneTimePassword + "\n\nThank You!\nChrist Covenant Church\n(314) 839-0292", user);
             mailSender.send(mailMessage);
@@ -102,7 +111,7 @@ public class RegistrationRestControllerImpl {
     }
 
     // Reset password after forgetting old password
-    @PostMapping("/user/resetPassword")
+    @PostMapping("/resetPassword")
     public GenericResponse resetPassword(final Locale locale, @RequestBody @Valid PasswordDto passwordDto) {
 
         final String result = securityUserService.validatePasswordResetToken(passwordDto.getToken());
@@ -121,7 +130,7 @@ public class RegistrationRestControllerImpl {
     }
 
     // Change User password from old password
-    @PostMapping("/user/updatePassword")
+    @PostMapping("/updatePassword")
     public GenericResponse updatePassword(@RequestBody final Locale locale, @RequestBody @Valid PasswordDto passwordDto) {
         final User user = userService.findUserByEmail(((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getEmail());
         if (!userService.checkIfValidOldPassword(user, passwordDto.getOldPassword())) {
@@ -132,7 +141,7 @@ public class RegistrationRestControllerImpl {
     }
 
     // Change user 2 factor authentication
-    @PostMapping("/user/update/2fa")
+    @PostMapping("/update/2fa")
     public GenericResponse modifyUser2FA(@RequestParam("use2FA") final boolean use2FA) throws UnsupportedEncodingException {
         final User user = userService.updateUser2FA(use2FA);
         if (use2FA) {
@@ -142,7 +151,7 @@ public class RegistrationRestControllerImpl {
     }
 
     // Inactivate account
-    @GetMapping("/user/inactivateAccount")
+    @GetMapping("/inactivateAccount")
     public GenericResponse inactivateAccount(@RequestParam final String verificationToken) {
         final User user = userService.getUser(verificationToken);
         if (userService.deactivateAccount(verificationToken))
@@ -152,7 +161,7 @@ public class RegistrationRestControllerImpl {
     }
 
     // IMS-10 Validate and inactivate user
-    @PostMapping("/user/deactivateAccount")
+    @PostMapping("/deactivateAccount")
     public GenericResponse deactivateLostAccount(@RequestParam final String email) {
         final User user = userService.findUserByEmail(email);
         final String token = UUID.randomUUID().toString();
@@ -160,7 +169,7 @@ public class RegistrationRestControllerImpl {
         return new GenericResponse("success");
     }
 
-    @GetMapping("user/activateAccount")
+    @GetMapping("/activateAccount")
     public GenericResponse activateAccount(@RequestParam final String email) {
         final User registered = userService.findUserByEmail(email);
         final String token = UUID.randomUUID().toString();

@@ -3,16 +3,12 @@ package com.example.demo.util;
 import com.example.demo.persistence.dao.VerificationTokenRepository;
 import com.example.demo.persistence.model.User;
 import com.example.demo.persistence.model.VerificationToken;
-import com.example.demo.security.ISecurityUserService;
-import com.example.demo.service.IUserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.MessageSource;
 import org.springframework.core.env.Environment;
 import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
@@ -20,16 +16,14 @@ import java.util.Locale;
 
 @Component
 public class RegistrationUtil {
+
     private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
     @Autowired
     private Environment env;
+    @Autowired
     private MessageSource messages;
-    private IUserService userService;
-    RegistrationUtil registrationUtil;
-    private JavaMailSender mailSender;
-    private ISecurityUserService securityUserService;
-    private ApplicationEventPublisher eventPublisher;
+    @Autowired
     private VerificationTokenRepository tokenRepository;
 
 
@@ -37,7 +31,7 @@ public class RegistrationUtil {
         final VerificationToken myToken = new VerificationToken(token, user);
         return tokenRepository.save(myToken);
     }
-    
+
     public SimpleMailMessage sendAccountActivationEmail(final String token, final String email, final User user) {
         final String subject = "Activate your account!";
         final String url = "http://localhost:8081/user/registration/activation?token=";
