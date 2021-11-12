@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import javax.ws.rs.core.Response;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.Date;
@@ -59,38 +60,38 @@ public class RegistrationRestController {
 
     // Registration
     @PostMapping("/registration/verification")
-    public GenericResponse registerUserAccount(@RequestBody @Valid final UserDto accountDto, final HttpServletRequest request) throws UserAlreadyExistException {
+    public Response registerUserAccount(@RequestBody @Valid final UserDto accountDto, final HttpServletRequest request) throws UserAlreadyExistException {
         LOGGER.debug("Registering user account with information: {}", accountDto);
 
         try {
             final User registered = userService.registerNewUserAccount(accountDto);
             final String token = UUID.randomUUID().toString();
             mailSender.send(registrationUtil.sendAccountActivationEmail(token, registered.getEmail(), registered));
-            return new GenericResponse("success");
+            return Response.status(Response.Status.OK).entity(registered).build();
         } catch (UserAlreadyExistException userAlreadyExistException) {
-            return new GenericResponse(messages.getMessage("message.regError", null, request.getLocale()));
+            return Response.status(Response.Status.CONFLICT).encoding(messages.getMessage("message.regError", null, null)).build();
         }
     }
 
     @GetMapping("/registration/activation")
-    public GenericResponse activateUserAccount(@RequestParam final String token, final HttpServletRequest request) {
+    public Response activateUserAccount(@RequestParam final String token, final HttpServletRequest request) {
         final VerificationToken verificationToken = userService.getVerificationToken(token);
         if (verificationToken.getExpiryDate().before(Date.from(Instant.now()))) {
-            return new GenericResponse(messages.getMessage("message.expired", null, request.getLocale()));
+            return Response.status(Response.Status.NOT_ACCEPTABLE).encoding(messages.getMessage("message.expired", null, null)).build();
         } else {
             final User user = userService.getUser(verificationToken.getToken());
             userService.activateAccount(user);
-            return new GenericResponse("success");
+            return Response.status(Response.Status.OK).encoding(messages.getMessage("success", null, null)).build();
         }
     }
 
     // User activation - verification
     @GetMapping("/resendRegistrationToken")
-    public GenericResponse sendRegistrationToken(final HttpServletRequest request, @RequestParam("token") final String existingToken) {
+    public Response sendRegistrationToken(final HttpServletRequest request, @RequestParam("token") final String existingToken) {
         final VerificationToken newToken = userService.generateNewVerificationToken(existingToken);
         final User user = userService.getUser(newToken.getToken());
         mailSender.send(registrationUtil.constructResendVerificationTokenEmail((registrationUtil.getAppUrl(request).toString()), request.getLocale(), newToken, user));
-        return new GenericResponse(messages.getMessage("message.resendToken", null, request.getLocale()));
+        return Response.status(Response.Status.OK).encoding(messages.getMessage("message.resendToken", null, request.getLocale())).build();
     }
 
     @PostMapping("/registration/oneTimePassword")
