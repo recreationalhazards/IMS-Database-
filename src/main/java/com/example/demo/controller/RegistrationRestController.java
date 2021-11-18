@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
+import org.springframework.mail.MailSendException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import javax.ws.rs.core.Response;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.Date;
@@ -142,38 +144,47 @@ public class RegistrationRestController {
 
     // Change user 2 factor authentication
     @PostMapping("/update/2fa")
-    public GenericResponse modifyUser2FA(@RequestParam("use2FA") final boolean use2FA) throws UnsupportedEncodingException {
+    public Response modifyUser2FA(@RequestParam("use2FA") final boolean use2FA) throws UnsupportedEncodingException {
         final User user = userService.updateUser2FA(use2FA);
         if (use2FA) {
-            return new GenericResponse(userService.generateQRUrl(user));
+            new GenericResponse(userService.generateQRUrl(user));
+            return Response.status(200).encoding("Account authenticated successfully").build();
         }
-        return null;
+        return Response.status(500).encoding("Error authenticating account").build();
     }
 
     // Inactivate account
     @GetMapping("/inactivateAccount")
-    public GenericResponse inactivateAccount(@RequestParam final String verificationToken) {
+    public Response inactivateAccount(@RequestParam final String verificationToken) {
         final User user = userService.getUser(verificationToken);
         if (userService.deactivateAccount(verificationToken))
-            return new GenericResponse("success");
+            return Response.status(200).encoding(messages.getMessage("message.succInactivateAccount", null, null)).build();
         else
-            return new GenericResponse("Error!", "account deactivation did not work");
+            return Response.status(420).encoding(messages.getMessage("message.unSuccInactivateAccount", null, null)).build();
     }
 
     // IMS-10 Validate and inactivate user
     @PostMapping("/deactivateAccount")
-    public GenericResponse deactivateLostAccount(@RequestParam final String email) {
+    public Response deactivateLostAccount(@RequestParam final String email) {
         final User user = userService.findUserByEmail(email);
         final String token = UUID.randomUUID().toString();
-        mailSender.send(registrationUtil.sendAccountDeActivationEmail(token, user.getEmail(), user));
-        return new GenericResponse("success");
+        try {
+            mailSender.send(registrationUtil.sendAccountDeActivationEmail(token, user.getEmail(), user));
+            return Response.status(200).encoding(messages.getMessage("message.deactivatingEmailSent", null, null)).build();
+        } catch (MailSendException mailSendException) {
+            return Response.status(424).encoding(messages.getMessage("message.deactivatingEmailUnsuccSent", null, null) + "\nReason: " + mailSendException.getMessage()).build();
+        }
     }
 
     @GetMapping("/activateAccount")
-    public GenericResponse activateAccount(@RequestParam final String email) {
+    public Response activateAccount(@RequestParam final String email) {
         final User registered = userService.findUserByEmail(email);
         final String token = UUID.randomUUID().toString();
-        mailSender.send(registrationUtil.sendAccountActivationEmail(token, registered.getEmail(), registered));
-        return new GenericResponse("success");
+        try {
+            mailSender.send(registrationUtil.sendAccountActivationEmail(token, registered.getEmail(), registered));
+            return Response.status(200).encoding(messages.getMessage("message.activatingEmailSent", null, null)).build();
+        } catch (MailSendException mailSendException) {
+            return Response.status(424).encoding(messages.getMessage("message.activatingEmailUnsuccSent", null, null) + "\nReason: " + mailSendException.getMessage()).build();
+        }
     }
 }
