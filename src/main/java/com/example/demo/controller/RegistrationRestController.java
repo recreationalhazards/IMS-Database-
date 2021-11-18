@@ -20,11 +20,11 @@ import org.springframework.context.MessageSource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import javax.ws.rs.core.Response;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.Date;
@@ -94,7 +94,7 @@ public class RegistrationRestController {
     }
 
     @PostMapping("/registration/oneTimePassword")
-    public GenericResponse recoverPassword(final HttpServletRequest request, @RequestParam("email") final String userEmail) {
+    public Response recoverPassword(final HttpServletRequest request, @RequestParam("email") final String userEmail) {
 
         final User user = userService.findUserByEmail(userEmail);
 
@@ -107,37 +107,37 @@ public class RegistrationRestController {
             mailSender.send(mailMessage);
         }
 
-        return new GenericResponse("Your one time password has been sent to your email!");
+        return Response.status(Response.Status.CREATED).encoding(messages.getMessage("Your one time password has been sent to your email!", null, request.getLocale())).build();
     }
 
     // Reset password after forgetting old password
     @PostMapping("/resetPassword")
-    public GenericResponse resetPassword(final Locale locale, @RequestBody @Valid PasswordDto passwordDto) {
+    public Response resetPassword(final Locale locale, @RequestBody @Valid PasswordDto passwordDto) {
 
         final String result = securityUserService.validatePasswordResetToken(passwordDto.getToken());
 
         if (result != null) {
-            return new GenericResponse(messages.getMessage("auth.message." + result, null, locale));
+            return Response.status(Response.Status.OK).encoding(messages.getMessage("auth.message." + result, null, locale)).build();
         }
 
         Optional<User> user = userService.getUserByPasswordResetToken(passwordDto.getToken());
         if (user.isPresent()) {
             userService.changeUserPassword(user.get(), passwordDto.getNewPassword(), (365 * 60 * 24));
-            return new GenericResponse(messages.getMessage("message.resetPasswordSuc", null, locale));
+            return Response.status(Response.Status.OK).encoding(messages.getMessage("message.resetPasswordSuc", null, locale)).build();
         } else {
-            return new GenericResponse(messages.getMessage("auth.message.invalid", null, locale));
+            return Response.status(Response.Status.CONFLICT).encoding(messages.getMessage("auth.message.invalid", null, locale)).build();
         }
     }
 
     // Change User password from old password
     @PostMapping("/updatePassword")
-    public GenericResponse updatePassword(@RequestBody final Locale locale, @RequestBody @Valid PasswordDto passwordDto) {
+    public Response updatePassword(@RequestBody final Locale locale, @RequestBody @Valid PasswordDto passwordDto) {
         final User user = userService.findUserByEmail(((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getEmail());
         if (!userService.checkIfValidOldPassword(user, passwordDto.getOldPassword())) {
             throw new InvalidOldPasswordException();
         }
         userService.changeUserPassword(user, passwordDto.getNewPassword(), (60 * 24));
-        return new GenericResponse(messages.getMessage("message.updatePasswordSuc", null, locale));
+        return Response.status(Response.Status.NO_CONTENT).encoding(messages.getMessage("message.updatePasswordSuc", null, locale)).build();
     }
 
     // Change user 2 factor authentication
