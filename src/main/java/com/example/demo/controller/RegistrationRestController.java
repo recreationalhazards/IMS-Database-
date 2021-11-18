@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
+import org.springframework.mail.MailSendException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -66,8 +67,12 @@ public class RegistrationRestController {
         try {
             final User registered = userService.registerNewUserAccount(accountDto);
             final String token = UUID.randomUUID().toString();
-            mailSender.send(registrationUtil.sendAccountActivationEmail(token, registered.getEmail(), registered));
-            return Response.status(Response.Status.OK).entity(registered).build();
+            try {
+                mailSender.send(registrationUtil.sendAccountActivationEmail(token, registered.getEmail(), registered));
+                return Response.status(Response.Status.OK).entity(registered).encoding(messages.getMessage("message.regSucc", null, null)).build();
+            }  catch (MailSendException mailSendException) {
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).encoding(messages.getMessage("message.regUnSuccLink", null, null) + "\nReason" + mailSendException.getMessage().toString()).build();
+            }
         } catch (UserAlreadyExistException userAlreadyExistException) {
             return Response.status(Response.Status.CONFLICT).encoding(messages.getMessage("message.regError", null, null)).build();
         }
@@ -81,7 +86,7 @@ public class RegistrationRestController {
         } else {
             final User user = userService.getUser(verificationToken.getToken());
             userService.activateAccount(user);
-            return Response.status(Response.Status.OK).encoding(messages.getMessage("success", null, null)).build();
+            return Response.status(Response.Status.OK).encoding(messages.getMessage("message.regSuccConfirmed", null, null)).build();
         }
     }
 
@@ -90,8 +95,12 @@ public class RegistrationRestController {
     public Response sendRegistrationToken(final HttpServletRequest request, @RequestParam("token") final String existingToken) {
         final VerificationToken newToken = userService.generateNewVerificationToken(existingToken);
         final User user = userService.getUser(newToken.getToken());
-        mailSender.send(registrationUtil.constructResendVerificationTokenEmail((registrationUtil.getAppUrl(request).toString()), request.getLocale(), newToken, user));
-        return Response.status(Response.Status.OK).encoding(messages.getMessage("message.resendToken", null, request.getLocale())).build();
+        try {
+            mailSender.send(registrationUtil.constructResendVerificationTokenEmail((registrationUtil.getAppUrl(request).toString()), request.getLocale(), newToken, user));
+            return Response.status(Response.Status.OK).encoding(messages.getMessage("message.resendToken", null, request.getLocale())).build();
+        } catch (MailSendException mailSendException) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).encoding(messages.getMessage("label.form.resendRegistrationToken", null, request.getLocale()) + "\nReason" + mailSendException.getMessage().toString()).build();
+        }
     }
 
     @PostMapping("/registration/oneTimePassword")
