@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
+import org.springframework.mail.MailSendException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -59,38 +60,46 @@ public class RegistrationRestController {
 
     // Registration
     @PostMapping("/registration/verification")
-    public GenericResponse registerUserAccount(@RequestBody @Valid final UserDto accountDto, final HttpServletRequest request) throws UserAlreadyExistException {
+    public Response registerUserAccount(@RequestBody @Valid final UserDto accountDto, final HttpServletRequest request) throws UserAlreadyExistException {
         LOGGER.debug("Registering user account with information: {}", accountDto);
 
         try {
             final User registered = userService.registerNewUserAccount(accountDto);
             final String token = UUID.randomUUID().toString();
-            mailSender.send(registrationUtil.sendAccountActivationEmail(token, registered.getEmail(), registered));
-            return new GenericResponse("success");
+            try {
+                mailSender.send(registrationUtil.sendAccountActivationEmail(token, registered.getEmail(), registered));
+                return Response.status(Response.Status.OK).entity(registered).encoding(messages.getMessage("message.regSucc", null, null)).build();
+            }  catch (MailSendException mailSendException) {
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).encoding(messages.getMessage("message.regUnSuccLink", null, null) + "\nReason" + mailSendException.getMessage().toString()).build();
+            }
         } catch (UserAlreadyExistException userAlreadyExistException) {
-            return new GenericResponse(messages.getMessage("message.regError", null, request.getLocale()));
+            return Response.status(Response.Status.CONFLICT).encoding(messages.getMessage("message.regError", null, null)).build();
         }
     }
 
     @GetMapping("/registration/activation")
-    public GenericResponse activateUserAccount(@RequestParam final String token, final HttpServletRequest request) {
+    public Response activateUserAccount(@RequestParam final String token, final HttpServletRequest request) {
         final VerificationToken verificationToken = userService.getVerificationToken(token);
         if (verificationToken.getExpiryDate().before(Date.from(Instant.now()))) {
-            return new GenericResponse(messages.getMessage("message.expired", null, request.getLocale()));
+            return Response.status(Response.Status.NOT_ACCEPTABLE).encoding(messages.getMessage("message.expired", null, null)).build();
         } else {
             final User user = userService.getUser(verificationToken.getToken());
             userService.activateAccount(user);
-            return new GenericResponse("success");
+            return Response.status(Response.Status.OK).encoding(messages.getMessage("message.regSuccConfirmed", null, null)).build();
         }
     }
 
     // User activation - verification
     @GetMapping("/resendRegistrationToken")
-    public GenericResponse sendRegistrationToken(final HttpServletRequest request, @RequestParam("token") final String existingToken) {
+    public Response sendRegistrationToken(final HttpServletRequest request, @RequestParam("token") final String existingToken) {
         final VerificationToken newToken = userService.generateNewVerificationToken(existingToken);
         final User user = userService.getUser(newToken.getToken());
-        mailSender.send(registrationUtil.constructResendVerificationTokenEmail((registrationUtil.getAppUrl(request).toString()), request.getLocale(), newToken, user));
-        return new GenericResponse(messages.getMessage("message.resendToken", null, request.getLocale()));
+        try {
+            mailSender.send(registrationUtil.constructResendVerificationTokenEmail((registrationUtil.getAppUrl(request).toString()), request.getLocale(), newToken, user));
+            return Response.status(Response.Status.OK).encoding(messages.getMessage("message.resendToken", null, request.getLocale())).build();
+        } catch (MailSendException mailSendException) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).encoding(messages.getMessage("label.form.resendRegistrationToken", null, request.getLocale()) + "\nReason" + mailSendException.getMessage().toString()).build();
+        }
     }
 
     @PostMapping("/registration/oneTimePassword")
