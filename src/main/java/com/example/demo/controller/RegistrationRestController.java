@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.error.InvalidOldPasswordException;
 import com.example.demo.error.UserAlreadyExistException;
+import com.example.demo.persistence.model.Group;
 import com.example.demo.persistence.model.User;
 import com.example.demo.persistence.model.VerificationToken;
 import com.example.demo.persistence.model.dto.PasswordDto;
@@ -28,10 +29,7 @@ import javax.validation.Valid;
 import javax.ws.rs.core.Response;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
-import java.util.Date;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @AllArgsConstructor
@@ -194,4 +192,19 @@ public class RegistrationRestController {
             return Response.status(424).encoding(messages.getMessage("message.activatingEmailUnsuccSent", null, null) + "\nReason: " + mailSendException.getMessage()).build();
         }
     }
+
+    @GetMapping("/users")
+    public List<User> usersList(Long id) {
+        final List<User> userList = userService.userList(id);
+        return userList;
+    }
+
+//    @GetMapping("/getGroup")
+//    public Group group(String groupName) {
+//        return userService.getGroup(groupName);
+//    }
+
+    // Create group
+    // Edit group
+    // Delete group
 }

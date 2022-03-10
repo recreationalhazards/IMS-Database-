@@ -1,10 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.error.UserAlreadyExistException;
-import com.example.demo.persistence.model.NewLocationToken;
-import com.example.demo.persistence.model.PasswordResetToken;
-import com.example.demo.persistence.model.User;
-import com.example.demo.persistence.model.VerificationToken;
+import com.example.demo.persistence.model.*;
 import com.example.demo.persistence.model.dto.UserDto;
 
 import java.io.UnsupportedEncodingException;
@@ -26,6 +23,8 @@ public interface IUserService {
     String generateQRUrl(User user) throws UnsupportedEncodingException;
     void changeUserPassword(User user, String password, int expiryMinutes);
     User registerNewUserAccount(UserDto accountDto) throws UserAlreadyExistException;
+    List<User> userList(Long id);
+    Group getGroup(String groupName);
 
     void deleteUser(User user);
     void saveRegisteredUser(User user);
