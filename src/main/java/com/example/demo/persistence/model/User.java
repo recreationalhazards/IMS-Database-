@@ -11,7 +11,7 @@ import java.util.Collection;
 public class User {
 
     @Id
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, name = "id")
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
